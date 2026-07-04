@@ -1,0 +1,60 @@
+.card-election {
+    border: 1px solid var(--color-secondary);
+    border-radius: 8px;
+    padding: 45px;
+    max-width: 900px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+.card-election__title {
+    font-family: var(--font-primary);
+    font-size: 32px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 8px;
+}
+
+.card-election__subtitle {
+    font-family: var(--font-primary);
+    font-size: 20px;
+    color: #555555;
+    margin-bottom: 35px;
+}
+
+.card-election__countdown {
+    background-color: var(--color-bg-light);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.card-election__countdown-label {
+    font-family: var(--font-primary);
+    font-size: 20px;
+    color: #333333;
+}
+
+.card-election__timer {
+    font-family: var(--font-primary);
+    font-size: 54px;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: 4px;
+    margin-top: 15px;
+}
+
+/* Fila de votación activa dentro de la lista */
+.card-election__row {
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-election__row:last-child {
+    border-bottom: none;
+}

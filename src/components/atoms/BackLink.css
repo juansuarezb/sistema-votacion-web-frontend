@@ -1,0 +1,25 @@
+.back-arrow {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-family: var(--font-primary);
+    font-weight: var(--weight-bold);
+    font-size: 16px;
+    color: var(--color-primary);
+    transition: transform 0.2s ease, color 0.2s ease;
+    z-index: 10;
+}
+
+.back-arrow:hover {
+    transform: translateX(-5px);
+    color: var(--color-primary-dark);
+}
+
+.back-arrow span {
+    font-size: 20px;
+    font-weight: var(--weight-bold);
+}

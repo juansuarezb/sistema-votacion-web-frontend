@@ -3,10 +3,18 @@ import './DignityTabs.css';
 interface DignityTabsProps {
   labels: string[];
   activeIndex?: number;
+  onSelect?: (index: number) => void;
 }
 
-/** View-only: renders the tab set with one active tab, no click switching (no functionality in scope). */
-export default function DignityTabs({ labels, activeIndex = 0 }: DignityTabsProps) {
+/**
+ * Renderiza las pestañas de preguntas.
+ * Si recibe onSelect, permite cambiar de pregunta.
+ */
+export default function DignityTabs({
+  labels,
+  activeIndex = 0,
+  onSelect,
+}: DignityTabsProps) {
   return (
     <div className="dignity-tabs">
       {labels.map((label, i) => (
@@ -14,6 +22,7 @@ export default function DignityTabs({ labels, activeIndex = 0 }: DignityTabsProp
           key={label}
           type="button"
           className={`dignity-tab ${i === activeIndex ? 'active' : ''}`.trim()}
+          onClick={() => onSelect?.(i)}
         >
           {label}
         </button>

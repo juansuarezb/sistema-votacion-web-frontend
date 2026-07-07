@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import VotanteLayout from '../../components/templates/VotanteLayout';
 import DignityTabs from '../../components/molecules/DignityTabs';
 import CandidateCard from '../../components/molecules/CandidateCard';

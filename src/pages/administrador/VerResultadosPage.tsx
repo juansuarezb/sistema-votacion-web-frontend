@@ -1,81 +1,172 @@
+import { useEffect, useState } from 'react';
 import AdminLayout from '../../components/templates/AdminLayout';
+import {
+  getReferendums,
+  type Referendum,
+} from '../../services/referendumService';
+import {
+  getResultsByReferendum,
+  type ResultResponse,
+} from '../../services/resultService';
 
-const votacion = {
-  idVotacion: 1,
-  titulo: 'Elección Presidencial 2026',
-  descripcion: 'Segunda vuelta electoral',
-  fechaInicio: '2026-08-01',
-  fechaCierre: '2026-08-15',
-};
+interface VerResultadosPageProps {
+  idReferendumInicial?: number;
+  onLogout: () => void;
+  onBack?: () => void;
+  onGoToVotantes: () => void;
+  onGoToVotaciones: () => void;
+  onGoToResultados: () => void;
+}
 
-const escrutinio = {
-  votosSi: 12043,
-  votosNo: 9876,
-  votosBlanco: 302,
-  votosNulo: 154,
-  totalVotosEmitidos: 22375,
-  porcentajeParticipacion: 61.4,
-};
+export default function VerResultadosPage({
+  idReferendumInicial,
+  onLogout,
+  onBack,
+  onGoToVotantes,
+  onGoToVotaciones,
+  onGoToResultados,
+}: VerResultadosPageProps) {
+  const [referendums, setReferendums] = useState<Referendum[]>([]);
+  const [idReferendum, setIdReferendum] = useState(
+    idReferendumInicial?.toString() ?? ''
+  );
+  const [resultado, setResultado] = useState<ResultResponse | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const [consultando, setConsultando] = useState(false);
+  const [error, setError] = useState('');
 
-/**
- * Nota: el original conecta a un WebSocket (ws://localhost:8080/resultados/{id})
- * para actualizar estos valores en vivo. Se omite aquí (solo vista, sin
- * funcionalidad) y se muestra un estado estático de ejemplo.
- */
-export default function VerResultadosPage() {
+  useEffect(() => {
+    async function cargarReferendums() {
+      try {
+        setCargando(true);
+        setError('');
+
+        const data = await getReferendums();
+        setReferendums(data);
+
+        if (!idReferendumInicial && data.length > 0) {
+          setIdReferendum(data[0].idReferendum.toString());
+        }
+      } catch (err) {
+        console.error('Error al cargar referendums:', err);
+
+        if (err instanceof Error) {
+          setError(`No se pudieron cargar las votaciones: ${err.message}`);
+        } else {
+          setError('No se pudieron cargar las votaciones.');
+        }
+      } finally {
+        setCargando(false);
+      }
+    }
+
+    cargarReferendums();
+  }, [idReferendumInicial]);
+
+  useEffect(() => {
+    if (idReferendum) {
+      consultarResultados(Number(idReferendum));
+    }
+  }, [idReferendum]);
+
+  const consultarResultados = async (id: number) => {
+    try {
+      setConsultando(true);
+      setError('');
+
+      const data = await getResultsByReferendum(id);
+      setResultado(data);
+    } catch (err) {
+      console.error('Error al consultar resultados:', err);
+
+      setResultado(null);
+
+      if (err instanceof Error) {
+        setError(`No se pudieron consultar los resultados: ${err.message}`);
+      } else {
+        setError('No se pudieron consultar los resultados.');
+      }
+    } finally {
+      setConsultando(false);
+    }
+  };
+
   return (
-    <AdminLayout welcomeName="Admin">
-      <h2>Resultados: {votacion.titulo}</h2>
-      <p>{votacion.descripcion}</p>
-      <p>
-        Fecha inicio: {votacion.fechaInicio} | Fecha cierre: {votacion.fechaCierre}
-      </p>
+    <AdminLayout
+      welcomeName="Admin"
+      activeSection="resultados"
+      onLogout={onLogout}
+      onGoToVotantes={onGoToVotantes}
+      onGoToVotaciones={onGoToVotaciones}
+      onGoToResultados={onGoToResultados}
+    >
+      <h2>Resultados</h2>
 
-      <hr />
+      {cargando && <p>Cargando votaciones...</p>}
 
-      <h3>Escrutinio</h3>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <table border={1}>
-        <thead>
-          <tr>
-            <th>Opción</th>
-            <th>Votos</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Sí</td>
-            <td>{escrutinio.votosSi}</td>
-          </tr>
-          <tr>
-            <td>No</td>
-            <td>{escrutinio.votosNo}</td>
-          </tr>
-          <tr>
-            <td>Blanco</td>
-            <td>{escrutinio.votosBlanco}</td>
-          </tr>
-          <tr>
-            <td>Nulo</td>
-            <td>{escrutinio.votosNulo}</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td><strong>Total</strong></td>
-            <td><strong>{escrutinio.totalVotosEmitidos}</strong></td>
-          </tr>
-        </tfoot>
-      </table>
+      {!cargando && referendums.length === 0 && (
+        <p>No existen votaciones registradas.</p>
+      )}
 
-      <br />
-      <p>Participación: {escrutinio.porcentajeParticipacion}%</p>
-      <p>Última actualización: --:--:--</p>
-      <p>Estado: 🟢 En vivo</p>
+      {!cargando && referendums.length > 0 && (
+        <>
+          <div>
+            <label>Seleccione una votación</label>
+            <br />
+            <select
+              value={idReferendum}
+              onChange={(event) => setIdReferendum(event.target.value)}
+            >
+              {referendums.map((referendum) => (
+                <option
+                  key={referendum.idReferendum}
+                  value={referendum.idReferendum}
+                >
+                  {referendum.titulo}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <br />
-      <a href="#">Volver</a>
-      <p>ID Votación: {votacion.idVotacion}</p>
+          {consultando && <p>Consultando resultados...</p>}
+
+          {resultado && (
+            <table border={1} cellPadding={8} style={{ marginTop: '1rem' }}>
+              <thead>
+                <tr>
+                  <th>Referéndum</th>
+                  <th>SI</th>
+                  <th>NO</th>
+                  <th>BLANCO</th>
+                  <th>NULO</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>{resultado.idReferendum}</td>
+                  <td>{resultado.totalSi}</td>
+                  <td>{resultado.totalNo}</td>
+                  <td>{resultado.totalBlanco}</td>
+                  <td>{resultado.totalNulo}</td>
+                  <td>{resultado.totalVotos}</td>
+                </tr>
+              </tbody>
+            </table>
+          )}
+
+          <br />
+
+          {onBack && (
+            <button type="button" onClick={onBack}>
+              Volver
+            </button>
+          )}
+        </>
+      )}
     </AdminLayout>
   );
 }

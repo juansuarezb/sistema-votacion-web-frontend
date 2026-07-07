@@ -1,0 +1,81 @@
+.admin-layout {
+  min-height: 100vh;
+  background: #f4f6f9;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1f2937;
+}
+
+.admin-navbar {
+  height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.admin-navbar__brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-navbar__title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0d47a1;
+  margin: 0;
+}
+
+.admin-navbar__welcome {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.admin-navbar__menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-navbar__button {
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-navbar__button:hover {
+  background: #e8f0fe;
+  color: #0d47a1;
+}
+
+.admin-navbar__button:disabled {
+  background: #0d47a1;
+  color: white;
+  cursor: default;
+}
+
+.admin-navbar__logout {
+  border: none;
+  background: #dc2626;
+  color: white;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-navbar__logout:hover {
+  background: #b91c1c;
+}
+
+.admin-content {
+  max-width: 1180px;
+  margin: 32px auto;
+  padding: 0 24px;
+}

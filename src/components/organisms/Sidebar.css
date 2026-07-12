@@ -1,74 +1,113 @@
 /* ==========================================================================
-   ORGANISMS: SIDEBAR DE NAVEGACIÓN (MENU LEFT)
+   ORGANISM: SIDEBAR COMPARTIDO
    ========================================================================== */
 
 .o-sidebar {
     width: 379px;
     height: calc(100vh - 90px);
-    background-color: var(--color-bg-page);
-    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+
     position: fixed;
     left: 0;
     top: 90px;
-    z-index: 10; 
-    padding: 60px 0 30px 0;
+
+    z-index: 100;
+
+    background-color: var(--color-bg-page);
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding: 60px 0 30px;
     box-sizing: border-box;
 }
 
 .o-sidebar__menu {
+    width: 100%;
+
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+.o-sidebar__footer {
     width: 100%;
 }
 
-/* Ítem individual del menú */
 .o-sidebar__item {
     width: 100%;
-    height: 83px;
+    min-height: 83px;
+
+    border: none;
+    border-radius: 0;
+
     display: flex;
     align-items: center;
-    padding-left: 26px;
-    background-color: var(--color-bg-page);
-    text-decoration: none;
+
+    padding: 12px 26px;
+
     position: relative;
+
+    background-color: var(--color-bg-page);
+    color: #000000;
+
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+
+    cursor: pointer;
+
     box-sizing: border-box;
-    transition: all 0.2s ease-in-out; /* Suaviza el cambio del hover */
+
+    transition:
+        background-color 0.2s ease-in-out,
+        color 0.2s ease-in-out;
 }
 
-/* EFECTO HOVER: Solo afecta a los botones que NO están activos */
-.o-sidebar__item:not(.o-sidebar__item--active):hover {
-    background-color: #C1C3C7; /* Oscurece sutilmente el fondo gris */
+.o-sidebar__item:not(
+    .o-sidebar__item--active
+):hover {
+    background-color: #c1c3c7;
 }
 
-.o-sidebar__item:not(.o-sidebar__item--active):hover .o-sidebar__text {
-    color: #333333; /* Cambia levemente el tono del texto */
+.o-sidebar__item:not(
+    .o-sidebar__item--active
+):hover .o-sidebar__text {
+    color: #333333;
 }
 
-/* Estado Activo / Seleccionado de la pestaña */
+.o-sidebar__item:focus-visible {
+    outline: 3px solid var(--color-secondary);
+    outline-offset: -3px;
+}
+
 .o-sidebar__item--active {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
 }
 
-/* El indicador de color gris en el extremo izquierdo */
 .o-sidebar__item--active::before {
     content: "";
+
     position: absolute;
     left: 0;
     top: 0;
+
     width: 10px;
     height: 100%;
+
     background-color: var(--color-muted);
 }
 
 .o-sidebar__text {
-    font-family: var(--font-primary);
-    font-weight: 700;
-    font-size: 30px;
-    color: #000000;
     margin-left: 16px;
+
+    font-family: var(--font-primary);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.2;
+
+    color: #000000;
+
     transition: color 0.2s ease;
 }

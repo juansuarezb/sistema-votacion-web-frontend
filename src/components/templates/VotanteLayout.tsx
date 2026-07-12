@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
+
 import Sidebar from '../organisms/Sidebar';
 import Header from '../organisms/Header';
 import HelpFloatingButton from '../atoms/HelpFloatingButton';
-import './VotanteLayout.css';
+
+import './DashboardLayout.css';
 
 interface VotanteLayoutProps {
   children: ReactNode;
@@ -17,11 +19,19 @@ export default function VotanteLayout({
 }: VotanteLayoutProps) {
   return (
     <>
-      <Sidebar seccionActiva={seccionActiva} onLogout={onLogout} />
+      <Sidebar
+        mode="votante"
+        seccionActiva={seccionActiva}
+        onLogout={onLogout}
+      />
+
       <Header />
 
       <div className="main-layout-container">
-        <main className="page-content">{children}</main>
+        <main className="page-content">
+          {children}
+        </main>
+
         <HelpFloatingButton />
       </div>
     </>

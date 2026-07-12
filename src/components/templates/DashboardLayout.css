@@ -1,0 +1,54 @@
+/* ==========================================================================
+   TEMPLATE COMPARTIDO: DASHBOARD ADMINISTRADOR Y VOTANTE
+   ========================================================================== */
+
+.main-layout-container {
+    margin-left: 379px;
+    margin-top: 90px;
+    min-height: calc(100vh - 90px);
+    background-color: #ffffff;
+
+    display: flex;
+    flex-direction: column;
+
+    position: relative;
+    box-sizing: border-box;
+}
+
+.page-content {
+    flex: 1;
+
+    padding: 60px;
+
+    display: flex;
+    flex-direction: column;
+
+    box-sizing: border-box;
+}
+
+.page-content__welcome {
+    font-family: var(--font-primary);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
+
+    color: #000000;
+
+    margin: 0 0 40px;
+}
+
+/* Evita que el contenido interno sobrepase el área disponible */
+.page-content > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+    .page-content {
+        padding: 40px;
+    }
+
+    .page-content__welcome {
+        font-size: 34px;
+    }
+}

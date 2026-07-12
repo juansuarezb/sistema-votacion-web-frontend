@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import keycloak from './auth/keycloak';
 
 import DashboardInicialPage from './pages/publicas/DashboardInicialPage';
+import RegistroAdminPage from './pages/publicas/RegistroAdminPage';
 
 import ListaVotacionesActivasPage from './pages/votante/ListaVotacionesActivasPage';
 import VotoPage from './pages/votante/VotoPage';
@@ -16,6 +17,10 @@ import CreacionVotacionPage from './pages/administrador/CreacionVotacionPage';
 import ModificacionVotacionPage from './pages/administrador/ModificacionVotacionPage';
 import AsignacionVotantesPage from './pages/administrador/AsignacionVotantesPage';
 import VerResultadosPage from './pages/administrador/VerResultadosPage';
+
+type PublicPage =
+  | 'landing'
+  | 'registro-admin';
 
 type Page =
   | 'votaciones'
@@ -33,9 +38,18 @@ type Page =
 function App() {
   const [keycloakReady, setKeycloakReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [page, setPage] = useState<Page>('votaciones');
-  const [selectedVotanteId, setSelectedVotanteId] = useState<number | null>(null);
-  const [selectedReferendumId, setSelectedReferendumId] = useState<number | null>(null);
+
+  const [publicPage, setPublicPage] =
+    useState<PublicPage>('landing');
+
+  const [page, setPage] =
+    useState<Page>('votaciones');
+
+  const [selectedVotanteId, setSelectedVotanteId] =
+    useState<number | null>(null);
+
+  const [selectedReferendumId, setSelectedReferendumId] =
+    useState<number | null>(null);
 
   useEffect(() => {
     keycloak
@@ -48,7 +62,8 @@ function App() {
         setAuthenticated(auth);
 
         if (auth) {
-          const roles = keycloak.tokenParsed?.realm_access?.roles ?? [];
+          const roles =
+            keycloak.tokenParsed?.realm_access?.roles ?? [];
 
           console.log('Roles:', roles);
           console.log('Token:', keycloak.tokenParsed);
@@ -65,20 +80,37 @@ function App() {
         setKeycloakReady(true);
       })
       .catch((error) => {
-        console.error('Error inicializando Keycloak:', error);
+        console.error(
+          'Error inicializando Keycloak:',
+          error
+        );
+
         setKeycloakReady(true);
       });
   }, []);
 
   const iniciarSesion = () => {
-    keycloak.login();
+    keycloak.login({
+      redirectUri: window.location.origin,
+    });
   };
 
   const finalizarSesion = () => {
-    localStorage.removeItem('idReferendumSeleccionado');
-    localStorage.removeItem('respuestasVoto');
-    localStorage.removeItem('votosRegistrados');
-    localStorage.removeItem('ultimoVoto');
+    localStorage.removeItem(
+      'idReferendumSeleccionado'
+    );
+
+    localStorage.removeItem(
+      'respuestasVoto'
+    );
+
+    localStorage.removeItem(
+      'votosRegistrados'
+    );
+
+    localStorage.removeItem(
+      'ultimoVoto'
+    );
 
     sessionStorage.clear();
 
@@ -103,49 +135,59 @@ function App() {
     setPage('admin-resultados');
   };
 
-  const roles = keycloak.tokenParsed?.realm_access?.roles ?? [];
-  const isAdmin = roles.includes('ADMIN');
-  const isAuditor = roles.includes('AUDITOR');
-  const isVotante = roles.includes('VOTANTE');
+  const roles =
+    keycloak.tokenParsed?.realm_access?.roles ?? [];
+
+  const isAdmin =
+    roles.includes('ADMIN');
+
+  const isAuditor =
+    roles.includes('AUDITOR');
+
+  const isVotante =
+    roles.includes('VOTANTE');
 
   if (!keycloakReady) {
-    return <p style={{ padding: '2rem' }}>Cargando autenticación...</p>;
+    return (
+      <p style={{ padding: '2rem' }}>
+        Cargando autenticación...
+      </p>
+    );
   }
 
   if (!authenticated) {
-    return (
-      <>
-        <DashboardInicialPage />
+    if (publicPage === 'registro-admin') {
+      return (
+        <RegistroAdminPage
+          onBack={() =>
+            setPublicPage('landing')
+          }
+          onRegistered={iniciarSesion}
+        />
+      );
+    }
 
-        <button
-          type="button"
-          onClick={iniciarSesion}
-          style={{
-            position: 'fixed',
-            top: '24px',
-            right: '24px',
-            zIndex: 9999,
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: 'none',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            backgroundColor: '#0d47a1',
-            color: 'white',
-          }}
-        >
-          Iniciar sesión
-        </button>
-      </>
+    return (
+      <DashboardInicialPage
+        onLogin={iniciarSesion}
+        onRegister={() =>
+          setPublicPage('registro-admin')
+        }
+      />
     );
   }
 
   if (isAdmin || isAuditor) {
-    if (page === 'admin-votantes' && isAdmin) {
+    if (
+      page === 'admin-votantes' &&
+      isAdmin
+    ) {
       return (
         <ListaVotantesPage
           onLogout={finalizarSesion}
-          onGoToCreate={() => setPage('admin-crear-votante')}
+          onGoToCreate={() =>
+            setPage('admin-crear-votante')
+          }
           onGoToEdit={(idVotante) => {
             setSelectedVotanteId(idVotante);
             setPage('admin-editar-votante');
@@ -157,7 +199,10 @@ function App() {
       );
     }
 
-    if (page === 'admin-crear-votante' && isAdmin) {
+    if (
+      page === 'admin-crear-votante' &&
+      isAdmin
+    ) {
       return (
         <CreacionVotantePage
           onLogout={finalizarSesion}
@@ -170,7 +215,11 @@ function App() {
       );
     }
 
-    if (page === 'admin-editar-votante' && isAdmin && selectedVotanteId) {
+    if (
+      page === 'admin-editar-votante' &&
+      isAdmin &&
+      selectedVotanteId
+    ) {
       return (
         <ModificacionVotantePage
           idVotante={selectedVotanteId}
@@ -188,7 +237,9 @@ function App() {
       return (
         <ListaVotacionesPage
           onLogout={finalizarSesion}
-          onGoToCreate={() => setPage('admin-crear-votacion')}
+          onGoToCreate={() =>
+            setPage('admin-crear-votacion')
+          }
           onGoToEdit={(idReferendum) => {
             setSelectedReferendumId(idReferendum);
             setPage('admin-editar-votacion');
@@ -208,7 +259,10 @@ function App() {
       );
     }
 
-    if (page === 'admin-crear-votacion' && isAdmin) {
+    if (
+      page === 'admin-crear-votacion' &&
+      isAdmin
+    ) {
       return (
         <CreacionVotacionPage
           onLogout={finalizarSesion}
@@ -221,7 +275,11 @@ function App() {
       );
     }
 
-    if (page === 'admin-editar-votacion' && isAdmin && selectedReferendumId) {
+    if (
+      page === 'admin-editar-votacion' &&
+      isAdmin &&
+      selectedReferendumId
+    ) {
       return (
         <ModificacionVotacionPage
           idReferendum={selectedReferendumId}
@@ -235,7 +293,11 @@ function App() {
       );
     }
 
-    if (page === 'admin-asignacion' && isAdmin && selectedReferendumId) {
+    if (
+      page === 'admin-asignacion' &&
+      isAdmin &&
+      selectedReferendumId
+    ) {
       return (
         <AsignacionVotantesPage
           idReferendum={selectedReferendumId}
@@ -251,7 +313,9 @@ function App() {
     if (page === 'admin-resultados') {
       return (
         <VerResultadosPage
-          idReferendumInicial={selectedReferendumId ?? undefined}
+          idReferendumInicial={
+            selectedReferendumId ?? undefined
+          }
           onLogout={finalizarSesion}
           onBack={goToAdminVotaciones}
           onGoToVotantes={goToAdminVotantes}
@@ -264,7 +328,11 @@ function App() {
     return (
       <div style={{ padding: '2rem' }}>
         <h1>Página no disponible</h1>
-        <button type="button" onClick={goToAdminVotantes}>
+
+        <button
+          type="button"
+          onClick={goToAdminVotantes}
+        >
           Volver al panel
         </button>
       </div>
@@ -275,8 +343,12 @@ function App() {
     if (page === 'voto') {
       return (
         <VotoPage
-          onBack={() => setPage('votaciones')}
-          onVoteSuccess={() => setPage('confirmacion')}
+          onBack={() =>
+            setPage('votaciones')
+          }
+          onVoteSuccess={() =>
+            setPage('confirmacion')
+          }
           onLogout={finalizarSesion}
         />
       );
@@ -285,7 +357,9 @@ function App() {
     if (page === 'confirmacion') {
       return (
         <ConfirmacionVotoPage
-          onVolverAVotacion={() => setPage('voto')}
+          onVolverAVotacion={() =>
+            setPage('voto')
+          }
           onFinalizarSesion={finalizarSesion}
           onLogout={finalizarSesion}
         />
@@ -294,7 +368,9 @@ function App() {
 
     return (
       <ListaVotacionesActivasPage
-        onGoToVote={() => setPage('voto')}
+        onGoToVote={() =>
+          setPage('voto')
+        }
         onLogout={finalizarSesion}
       />
     );
@@ -303,9 +379,16 @@ function App() {
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Acceso no autorizado</h1>
-      <p>Tu usuario no tiene un rol válido para acceder al sistema.</p>
 
-      <button type="button" onClick={finalizarSesion}>
+      <p>
+        Tu usuario no tiene un rol válido
+        para acceder al sistema.
+      </p>
+
+      <button
+        type="button"
+        onClick={finalizarSesion}
+      >
         Cerrar sesión
       </button>
     </div>

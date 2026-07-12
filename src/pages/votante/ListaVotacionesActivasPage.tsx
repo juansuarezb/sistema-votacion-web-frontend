@@ -1,26 +1,32 @@
 import { useEffect, useState } from 'react';
+
+import keycloak from '../../auth/keycloak';
+
 import VotanteLayout from '../../components/templates/VotanteLayout';
 import ElectionCard from '../../components/molecules/ElectionCard';
 import Button from '../../components/atoms/Button';
+
 import {
-  getReferendums,
-  getReferendumQuestions,
-  getQuestionEligibility,
-  type Referendum,
+  getAssignedReferendumsByVoter,
+  type AssignedReferendum,
 } from '../../services/referendumService';
+
+import {
+  getVotanteByKeycloakId,
+} from '../../services/voterService';
 
 interface ListaVotacionesActivasPageProps {
   onGoToVote: () => void;
   onLogout: () => void;
 }
 
-const ID_VOTANTE_ACTUAL = 1; // Temporal: luego se obtiene desde Keycloak
-
 export default function ListaVotacionesActivasPage({
   onGoToVote,
   onLogout,
 }: ListaVotacionesActivasPageProps) {
-  const [votacionesActivas, setVotacionesActivas] = useState<Referendum[]>([]);
+  const [votacionesActivas, setVotacionesActivas] =
+    useState<AssignedReferendum[]>([]);
+
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -30,70 +36,37 @@ export default function ListaVotacionesActivasPage({
         setCargando(true);
         setError('');
 
-        const referendums = await getReferendums();
+        const keycloakId = keycloak.tokenParsed?.sub;
 
-        const referendumsActivos = referendums.filter(
-          (referendum) => referendum.estado === 'ACTIVO'
-        );
-
-        const referendumsDisponibles: Referendum[] = [];
-
-        for (const referendum of referendumsActivos) {
-          const preguntas = await getReferendumQuestions(
-            referendum.idReferendum
+        if (!keycloakId) {
+          throw new Error(
+            'No se pudo obtener el identificador del usuario autenticado.'
           );
-
-          if (preguntas.length === 0) {
-            continue;
-          }
-
-          const validaciones = await Promise.all(
-            preguntas.map((pregunta) =>
-              getQuestionEligibility(
-                referendum.idReferendum,
-                pregunta.idQuestion,
-                ID_VOTANTE_ACTUAL
-              ).catch(() => null)
-            )
-          );
-
-          const tienePreguntaPendiente = validaciones.some((validacion) => {
-            if (!validacion) {
-              return false;
-            }
-
-            if (typeof validacion.eligible === 'boolean') {
-              return validacion.eligible;
-            }
-
-            if (typeof validacion.isEligible === 'boolean') {
-              return validacion.isEligible;
-            }
-
-            if (typeof validacion.puedeVotar === 'boolean') {
-              return validacion.puedeVotar;
-            }
-
-            if (typeof validacion.haVotado === 'boolean') {
-              return !validacion.haVotado;
-            }
-
-            return false;
-          });
-
-          if (tienePreguntaPendiente) {
-            referendumsDisponibles.push(referendum);
-          }
         }
 
-        setVotacionesActivas(referendumsDisponibles);
+        const perfilVotante =
+          await getVotanteByKeycloakId(keycloakId);
+
+        const referendums =
+          await getAssignedReferendumsByVoter(
+            perfilVotante.idVotante
+          );
+
+        setVotacionesActivas(referendums);
       } catch (err) {
-        console.error('Error al cargar votaciones disponibles:', err);
+        console.error(
+          'Error al cargar votaciones asignadas:',
+          err
+        );
 
         if (err instanceof Error) {
-          setError(`No se pudieron cargar las votaciones: ${err.message}`);
+          setError(
+            `No se pudieron cargar las votaciones: ${err.message}`
+          );
         } else {
-          setError('No se pudieron cargar las votaciones.');
+          setError(
+            'No se pudieron cargar las votaciones.'
+          );
         }
       } finally {
         setCargando(false);
@@ -103,8 +76,19 @@ export default function ListaVotacionesActivasPage({
     cargarVotacionesDisponibles();
   }, []);
 
-  const irAVotar = (idReferendum: number) => {
-    localStorage.setItem('idReferendumSeleccionado', idReferendum.toString());
+  const irAVotar = (
+    idReferendum: number,
+    idVotante: number
+  ) => {
+    localStorage.setItem(
+      'idReferendumSeleccionado',
+      idReferendum.toString()
+    );
+
+    localStorage.setItem(
+      'idVotanteActual',
+      idVotante.toString()
+    );
 
     localStorage.removeItem('respuestasVoto');
     localStorage.removeItem('votosRegistrados');
@@ -115,7 +99,9 @@ export default function ListaVotacionesActivasPage({
 
   return (
     <VotanteLayout onLogout={onLogout}>
-      <h1 className="page-content__welcome">Votaciones Activas</h1>
+      <h1 className="page-content__welcome">
+        Votaciones Activas
+      </h1>
 
       {cargando && (
         <ElectionCard>
@@ -125,44 +111,95 @@ export default function ListaVotacionesActivasPage({
 
       {error && (
         <ElectionCard>
-          <p style={{ color: 'red' }}>{error}</p>
-        </ElectionCard>
-      )}
-
-      {!cargando && !error && votacionesActivas.length > 0 && (
-        <ElectionCard>
-          {votacionesActivas.map((votacion) => (
-            <div className="card-election__row" key={votacion.idReferendum}>
-              <div>
-                <h3 className="card-election__title">{votacion.titulo}</h3>
-
-                {votacion.descripcion && <p>{votacion.descripcion}</p>}
-
-                <small>
-                  Cierre: {new Date(votacion.fechaCierre).toLocaleString()}
-                </small>
-              </div>
-
-              <Button
-                type="button"
-                variant="action"
-                style={{ width: 'auto', padding: '12px 28px' }}
-                onClick={() => irAVotar(votacion.idReferendum)}
-              >
-                Ir a votar
-              </Button>
-            </div>
-          ))}
-        </ElectionCard>
-      )}
-
-      {!cargando && !error && votacionesActivas.length === 0 && (
-        <ElectionCard>
-          <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-            Sin votaciones activas
+          <p style={{ color: 'red' }}>
+            {error}
           </p>
         </ElectionCard>
       )}
+
+      {!cargando &&
+        !error &&
+        votacionesActivas.length > 0 && (
+          <ElectionCard>
+            {votacionesActivas.map((votacion) => (
+              <div
+                className="card-election__row"
+                key={votacion.idReferendum}
+              >
+                <div>
+                  <h3 className="card-election__title">
+                    {votacion.titulo}
+                  </h3>
+
+                  {votacion.descripcion && (
+                    <p>{votacion.descripcion}</p>
+                  )}
+
+                  <small>
+                    Preguntas pendientes:{' '}
+                    {votacion.preguntasPendientes}
+                  </small>
+
+                  <br />
+
+                  <small>
+                    Cierre:{' '}
+                    {new Date(
+                      votacion.fechaCierre
+                    ).toLocaleString()}
+                  </small>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="action"
+                  style={{
+                    width: 'auto',
+                    padding: '12px 28px',
+                  }}
+                  onClick={async () => {
+                    const keycloakId =
+                      keycloak.tokenParsed?.sub;
+
+                    if (!keycloakId) {
+                      setError(
+                        'No se pudo identificar al votante.'
+                      );
+                      return;
+                    }
+
+                    const perfil =
+                      await getVotanteByKeycloakId(
+                        keycloakId
+                      );
+
+                    irAVotar(
+                      votacion.idReferendum,
+                      perfil.idVotante
+                    );
+                  }}
+                >
+                  Ir a votar
+                </Button>
+              </div>
+            ))}
+          </ElectionCard>
+        )}
+
+      {!cargando &&
+        !error &&
+        votacionesActivas.length === 0 && (
+          <ElectionCard>
+            <p
+              style={{
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+              }}
+            >
+              Sin votaciones activas
+            </p>
+          </ElectionCard>
+        )}
     </VotanteLayout>
   );
 }

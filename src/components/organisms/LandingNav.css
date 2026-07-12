@@ -54,3 +54,10 @@
         justify-content: center;
     }
 }
+
+.landing-nav button.landing-nav__link {
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}

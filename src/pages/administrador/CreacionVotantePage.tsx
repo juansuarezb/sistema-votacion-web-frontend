@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AdminLayout from '../../components/templates/AdminLayout';
-import { createVotante } from '../../services/voterService';
+import { registerVotante } from '../../services/voterService';
 
 interface CreacionVotantePageProps {
   onLogout: () => void;
@@ -19,26 +19,67 @@ export default function CreacionVotantePage({
   onGoToVotaciones,
   onGoToResultados,
 }: CreacionVotantePageProps) {
-  const [keycloakId, setKeycloakId] = useState('');
+  const [username, setUsername] = useState('');
   const [nombre, setNombre] = useState('');
   const [cedula, setCedula] = useState('');
   const [correoElectronico, setCorreoElectronico] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmarPassword, setConfirmarPassword] = useState('');
+
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
 
-  const validar = () => {
-    if (!keycloakId.trim()) return 'El Keycloak ID es obligatorio.';
-    if (!nombre.trim()) return 'El nombre es obligatorio.';
-    if (!cedula.trim()) return 'La cédula es obligatoria.';
-    if (!/^\d+$/.test(cedula)) return 'La cédula solo debe contener números.';
-    if (cedula.length !== 10) return 'La cédula debe tener 10 dígitos.';
-    if (!correoElectronico.trim()) return 'El correo es obligatorio.';
-    if (!correoElectronico.includes('@')) return 'El correo no es válido.';
+  const validar = (): string => {
+    if (!username.trim()) {
+      return 'El nombre de usuario es obligatorio.';
+    }
+
+    if (username.trim().length < 4) {
+      return 'El nombre de usuario debe tener al menos 4 caracteres.';
+    }
+
+    if (!nombre.trim()) {
+      return 'El nombre es obligatorio.';
+    }
+
+    if (!cedula.trim()) {
+      return 'La cédula es obligatoria.';
+    }
+
+    if (!/^\d+$/.test(cedula)) {
+      return 'La cédula solo debe contener números.';
+    }
+
+    if (cedula.length !== 10) {
+      return 'La cédula debe tener 10 dígitos.';
+    }
+
+    if (!correoElectronico.trim()) {
+      return 'El correo es obligatorio.';
+    }
+
+    if (!correoElectronico.includes('@')) {
+      return 'El correo no es válido.';
+    }
+
+    if (!password) {
+      return 'La contraseña es obligatoria.';
+    }
+
+    if (password.length < 8) {
+      return 'La contraseña debe tener al menos 8 caracteres.';
+    }
+
+    if (password !== confirmarPassword) {
+      return 'Las contraseñas no coinciden.';
+    }
 
     return '';
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
     const validationError = validar();
@@ -52,101 +93,195 @@ export default function CreacionVotantePage({
       setGuardando(true);
       setError('');
 
-      await createVotante({
-        keycloakId,
-        nombre,
-        cedula,
-        correoElectronico,
+      await registerVotante({
+        username: username.trim(),
+        nombre: nombre.trim(),
+        cedula: cedula.trim(),
+        correoElectronico: correoElectronico.trim(),
+        password,
       });
 
       onCreated();
     } catch (err) {
-      console.error('Error al crear votante:', err);
+      console.error('Error al registrar votante:', err);
 
       if (err instanceof Error) {
-        setError(`No se pudo crear el votante: ${err.message}`);
+        setError(
+          `No se pudo registrar el votante: ${err.message}`
+        );
       } else {
-        setError('No se pudo crear el votante.');
+        setError('No se pudo registrar el votante.');
       }
     } finally {
       setGuardando(false);
     }
   };
 
-return (
-  <AdminLayout
-    welcomeName="Admin"
-    activeSection="votantes"
-    onLogout={onLogout}
-    onGoToVotantes={onGoToVotantes}
-    onGoToVotaciones={onGoToVotaciones}
-    onGoToResultados={onGoToResultados}
-  >
-    <section className="admin-page">
-      <div className="admin-page__header">
-        <h2 className="admin-page__title">Crear Votante</h2>
-      </div>
-
-      <form className="admin-form" onSubmit={handleSubmit}>
-        <div className="admin-form__group">
-          <label>Keycloak ID</label>
-          <input
-            value={keycloakId}
-            onChange={(event) => setKeycloakId(event.target.value)}
-            required
-          />
+  return (
+    <AdminLayout
+      welcomeName="Admin"
+      activeSection="votantes"
+      onLogout={onLogout}
+      onGoToVotantes={onGoToVotantes}
+      onGoToVotaciones={onGoToVotaciones}
+      onGoToResultados={onGoToResultados}
+    >
+      <section className="admin-page">
+        <div className="admin-page__header">
+          <h2 className="admin-page__title">
+            Crear Votante
+          </h2>
         </div>
 
-        <div className="admin-form__group">
-          <label>Nombre</label>
-          <input
-            value={nombre}
-            onChange={(event) => setNombre(event.target.value)}
-            required
-          />
-        </div>
+        <form
+          className="admin-form"
+          onSubmit={handleSubmit}
+        >
+          <div className="admin-form__group">
+            <label htmlFor="username">
+              Nombre de usuario
+            </label>
 
-        <div className="admin-form__group">
-          <label>Cédula</label>
-          <input
-            value={cedula}
-            onChange={(event) => setCedula(event.target.value)}
-            required
-            maxLength={10}
-          />
-        </div>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              value={username}
+              onChange={(event) =>
+                setUsername(event.target.value)
+              }
+              autoComplete="username"
+              disabled={guardando}
+              required
+            />
+          </div>
 
-        <div className="admin-form__group">
-          <label>Correo electrónico</label>
-          <input
-            type="email"
-            value={correoElectronico}
-            onChange={(event) => setCorreoElectronico(event.target.value)}
-            required
-          />
-        </div>
+          <div className="admin-form__group">
+            <label htmlFor="nombre">
+              Nombre completo
+            </label>
 
-        {error && <p className="admin-error">{error}</p>}
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              value={nombre}
+              onChange={(event) =>
+                setNombre(event.target.value)
+              }
+              autoComplete="name"
+              disabled={guardando}
+              required
+            />
+          </div>
 
-        <div className="admin-actions">
-          <button
-            type="submit"
-            className="admin-button admin-button--primary"
-            disabled={guardando}
-          >
-            {guardando ? 'Guardando...' : 'Guardar'}
-          </button>
+          <div className="admin-form__group">
+            <label htmlFor="cedula">
+              Cédula
+            </label>
 
-          <button
-            type="button"
-            className="admin-button admin-button--secondary"
-            onClick={onBack}
-          >
-            Volver
-          </button>
-        </div>
-      </form>
-    </section>
-  </AdminLayout>
-);
+            <input
+              id="cedula"
+              name="cedula"
+              type="text"
+              inputMode="numeric"
+              value={cedula}
+              onChange={(event) =>
+                setCedula(
+                  event.target.value.replace(/\D/g, '')
+                )
+              }
+              maxLength={10}
+              disabled={guardando}
+              required
+            />
+          </div>
+
+          <div className="admin-form__group">
+            <label htmlFor="correoElectronico">
+              Correo electrónico
+            </label>
+
+            <input
+              id="correoElectronico"
+              name="correoElectronico"
+              type="email"
+              value={correoElectronico}
+              onChange={(event) =>
+                setCorreoElectronico(event.target.value)
+              }
+              autoComplete="email"
+              disabled={guardando}
+              required
+            />
+          </div>
+
+          <div className="admin-form__group">
+            <label htmlFor="password">
+              Contraseña
+            </label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
+              autoComplete="new-password"
+              disabled={guardando}
+              required
+            />
+          </div>
+
+          <div className="admin-form__group">
+            <label htmlFor="confirmarPassword">
+              Confirmar contraseña
+            </label>
+
+            <input
+              id="confirmarPassword"
+              name="confirmarPassword"
+              type="password"
+              value={confirmarPassword}
+              onChange={(event) =>
+                setConfirmarPassword(event.target.value)
+              }
+              autoComplete="new-password"
+              disabled={guardando}
+              required
+            />
+          </div>
+
+          {error && (
+            <p className="admin-error">
+              {error}
+            </p>
+          )}
+
+          <div className="admin-actions">
+            <button
+              type="submit"
+              className="admin-button admin-button--primary"
+              disabled={guardando}
+            >
+              {guardando
+                ? 'Registrando...'
+                : 'Registrar votante'}
+            </button>
+
+            <button
+              type="button"
+              className="admin-button admin-button--secondary"
+              onClick={onBack}
+              disabled={guardando}
+            >
+              Volver
+            </button>
+          </div>
+        </form>
+      </section>
+    </AdminLayout>
+  );
 }

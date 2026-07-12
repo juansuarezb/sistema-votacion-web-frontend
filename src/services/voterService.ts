@@ -37,31 +37,42 @@ export interface UpdateVotanteRequest {
   correoElectronico: string;
 }
 
-export function getVotantes() {
-  return apiRequest<Votante[]>("/api/votantes");
+export function getVotantes(): Promise<Votante[]> {
+  return apiRequest<Votante[]>(
+    "/api/votantes"
+  );
 }
 
-export function getVotanteById(id: number) {
-  return apiRequest<Votante>(`/api/votantes/${id}`);
+export function getVotanteById(
+  id: number
+): Promise<Votante> {
+  return apiRequest<Votante>(
+    `/api/votantes/${id}`
+  );
 }
 
 /**
- * Endpoint antiguo:
- * crea únicamente el perfil en VoterService.
+ * Crea solamente el perfil dentro de VoterService.
  */
-export function createVotante(data: CreateVotanteRequest) {
-  return apiRequest<Votante>("/api/votantes", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+export function createVotante(
+  data: CreateVotanteRequest
+): Promise<Votante> {
+  return apiRequest<Votante>(
+    "/api/votantes",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
 }
 
 /**
- * Endpoint nuevo:
- * crea el usuario en Keycloak, asigna VOTANTE
+ * Crea el usuario en Keycloak, asigna el rol VOTANTE
  * y crea el perfil en VoterService.
  */
-export function registerVotante(data: RegisterVotanteRequest) {
+export function registerVotante(
+  data: RegisterVotanteRequest
+): Promise<RegisterVotanteResponse> {
   return apiRequest<RegisterVotanteResponse>(
     "/api/auth/register-voter",
     {
@@ -74,27 +85,37 @@ export function registerVotante(data: RegisterVotanteRequest) {
 export function updateVotante(
   id: number,
   data: UpdateVotanteRequest
-) {
-  return apiRequest<void>(`/api/votantes/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/votantes/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }
+  );
 }
 
 /**
- * Elimina tanto la identidad de Keycloak
- * como el perfil almacenado en VoterService.
+ * Elimina la identidad de Keycloak
+ * y el perfil almacenado en VoterService.
  */
-export function deleteVotante(id: number) {
-  return apiRequest<void>(`/api/auth/voters/${id}`, {
-    method: "DELETE",
-  });
+export function deleteVotante(
+  id: number
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/auth/voters/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 }
 
 export function getVotanteByKeycloakId(
   keycloakId: string
-) {
+): Promise<Votante> {
   return apiRequest<Votante>(
-    `/api/votantes/by-keycloak/${keycloakId}`
+    `/api/votantes/by-keycloak/${encodeURIComponent(
+      keycloakId
+    )}`
   );
 }

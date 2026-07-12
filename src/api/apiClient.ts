@@ -1,48 +1,190 @@
-import keycloak from '../auth/keycloak';
+import keycloak from "../auth/keycloak";
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL;
 
+if (!API_URL) {
+  throw new Error(
+    "No se encontró la variable de entorno VITE_API_URL."
+  );
+}
+
+export interface ApiRequestOptions extends RequestInit {
+  requireAuth?: boolean;
+}
+
+/**
+ * Actualiza el token si está próximo a expirar.
+ */
+async function getAccessToken(): Promise<string | undefined> {
+  if (!keycloak.authenticated) {
+    return undefined;
+  }
+
+  try {
+    await keycloak.updateToken(30);
+    return keycloak.token;
+  } catch (error) {
+    console.error("No se pudo actualizar el token:", error);
+
+    keycloak.logout({
+      redirectUri: window.location.origin,
+    });
+
+    throw new Error(
+      "La sesión expiró. Debes iniciar sesión nuevamente."
+    );
+  }
+}
+
+/**
+ * Construye los headers comunes para todas las peticiones.
+ */
+async function buildHeaders(
+  options: ApiRequestOptions
+): Promise<Headers> {
+  const headers = new Headers(options.headers);
+
+  const hasBody =
+    options.body !== undefined &&
+    options.body !== null;
+
+  const isFormData =
+    typeof FormData !== "undefined" &&
+    options.body instanceof FormData;
+
+  if (
+    hasBody &&
+    !isFormData &&
+    !headers.has("Content-Type")
+  ) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  headers.set("Accept", "application/json");
+
+  /*
+   * Evita la página de advertencia del plan gratuito de ngrok.
+   * Solo se agrega cuando la API realmente usa un dominio ngrok.
+   */
+  if (API_URL.includes("ngrok-free")) {
+    headers.set(
+      "ngrok-skip-browser-warning",
+      "true"
+    );
+  }
+
+  const requireAuth = options.requireAuth ?? true;
+
+  if (requireAuth) {
+    const token = await getAccessToken();
+
+    if (!token) {
+      throw new Error(
+        "No existe una sesión autenticada."
+      );
+    }
+
+    headers.set(
+      "Authorization",
+      `Bearer ${token}`
+    );
+  }
+
+  return headers;
+}
+
+/**
+ * Cliente HTTP centralizado para consumir el API Gateway.
+ */
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> {
-  const token = keycloak.token;
+  const normalizedPath = path.startsWith("/")
+    ? path
+    : `/${path}`;
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const url = `${API_URL.replace(/\/$/, "")}${normalizedPath}`;
+
+  const headers = await buildHeaders(options);
+
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    console.error(
+      `Error de red al llamar ${url}:`,
+      error
+    );
+
+    throw new Error(
+      "No se pudo conectar con el servidor."
+    );
+  }
+
+  if (response.status === 401) {
+    throw new Error(
+      "La sesión no es válida o ha expirado."
+    );
+  }
+
+  if (response.status === 403) {
+    throw new Error(
+      "No tienes permisos para realizar esta acción."
+    );
+  }
 
   if (!response.ok) {
-    let errorMessage = `Error HTTP ${response.status}`;
+    const contentType =
+      response.headers.get("content-type");
+
+    let errorMessage =
+      `Error ${response.status}: ${response.statusText}`;
 
     try {
-      const errorBody = await response.json();
-      errorMessage =
-        errorBody.error ||
-        errorBody.mensaje ||
-        errorBody.message ||
-        errorMessage;
+      if (
+        contentType?.includes("application/json")
+      ) {
+        const errorBody = await response.json();
+
+        errorMessage =
+          errorBody.message ??
+          errorBody.title ??
+          errorBody.detail ??
+          JSON.stringify(errorBody);
+      } else {
+        const errorText = await response.text();
+
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
     } catch {
-      // Si el error no trae JSON, dejamos el mensaje HTTP.
+      // Se conserva el mensaje HTTP original.
     }
 
     throw new Error(errorMessage);
   }
 
-  if (response.status === 204) {
+  if (
+    response.status === 204 ||
+    response.headers.get("content-length") === "0"
+  ) {
     return undefined as T;
   }
 
-  const text = await response.text();
+  const contentType =
+    response.headers.get("content-type");
 
-  if (!text) {
-    return undefined as T;
+  if (
+    contentType?.includes("application/json")
+  ) {
+    return response.json() as Promise<T>;
   }
 
-  return JSON.parse(text) as T;
+  return undefined as T;
 }

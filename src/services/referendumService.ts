@@ -57,38 +57,61 @@ export interface EligibilityResponse {
   mensaje?: string;
 }
 
-export function getReferendums() {
-  return apiRequest<Referendum[]>("/api/referendums");
+export function getReferendums(): Promise<
+  Referendum[]
+> {
+  return apiRequest<Referendum[]>(
+    "/api/referendums"
+  );
 }
 
-export function getReferendumById(id: number) {
-  return apiRequest<Referendum>(`/api/referendums/${id}`);
+export function getReferendumById(
+  id: number
+): Promise<Referendum> {
+  return apiRequest<Referendum>(
+    `/api/referendums/${id}`
+  );
 }
 
-export function createReferendum(data: CreateReferendumRequest) {
-  return apiRequest<Referendum>("/api/referendums", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+export function createReferendum(
+  data: CreateReferendumRequest
+): Promise<Referendum> {
+  return apiRequest<Referendum>(
+    "/api/referendums",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
 }
 
 export function updateReferendum(
   id: number,
   data: UpdateReferendumRequest
-) {
-  return apiRequest<void>(`/api/referendums/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/referendums/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }
+  );
 }
 
-export function deleteReferendum(id: number) {
-  return apiRequest<void>(`/api/referendums/${id}`, {
-    method: "DELETE",
-  });
+export function deleteReferendum(
+  id: number
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/referendums/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 }
 
-export function getReferendumQuestions(idReferendum: number) {
+export function getReferendumQuestions(
+  idReferendum: number
+): Promise<ReferendumQuestion[]> {
   return apiRequest<ReferendumQuestion[]>(
     `/api/referendums/${idReferendum}/questions`
   );
@@ -97,7 +120,7 @@ export function getReferendumQuestions(idReferendum: number) {
 export function createReferendumQuestion(
   idReferendum: number,
   data: CreateQuestionRequest
-) {
+): Promise<ReferendumQuestion> {
   return apiRequest<ReferendumQuestion>(
     `/api/referendums/${idReferendum}/questions`,
     {
@@ -110,19 +133,21 @@ export function createReferendumQuestion(
 export function assignVoterToReferendum(
   idReferendum: number,
   idVotante: number
-) {
+): Promise<void> {
   return apiRequest<void>(
     `/api/referendums/${idReferendum}/voters`,
     {
       method: "POST",
-      body: JSON.stringify({ idVotante }),
+      body: JSON.stringify({
+        idVotante,
+      }),
     }
   );
 }
 
 export function getAssignedReferendumsByVoter(
   idVotante: number
-) {
+): Promise<AssignedReferendum[]> {
   return apiRequest<AssignedReferendum[]>(
     `/api/referendums/voters/${idVotante}/assigned`
   );
@@ -132,7 +157,7 @@ export function getQuestionEligibility(
   idReferendum: number,
   idQuestion: number,
   idVotante: number
-) {
+): Promise<EligibilityResponse> {
   return apiRequest<EligibilityResponse>(
     `/api/referendums/${idReferendum}/questions/${idQuestion}/voters/${idVotante}/eligibility`
   );

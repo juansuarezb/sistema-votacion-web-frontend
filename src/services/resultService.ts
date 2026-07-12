@@ -9,6 +9,10 @@ export interface ResultResponse {
   totalVotos: number;
 }
 
-export function getResultsByReferendum(idReferendum: number) {
-  return apiRequest<ResultResponse>(`/api/results/referendums/${idReferendum}`);
+export function getResultsByReferendum(
+  idReferendum: number
+): Promise<ResultResponse> {
+  return apiRequest<ResultResponse>(
+    `/api/results/referendums/${idReferendum}`
+  );
 }

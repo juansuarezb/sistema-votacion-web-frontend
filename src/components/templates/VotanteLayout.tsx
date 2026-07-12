@@ -1,4 +1,8 @@
-import type { ReactNode } from 'react';
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import Sidebar from '../organisms/Sidebar';
 import Header from '../organisms/Header';
@@ -17,15 +21,43 @@ export default function VotanteLayout({
   seccionActiva = 'votaciones',
   onLogout,
 }: VotanteLayoutProps) {
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow =
+      menuOpen ? 'hidden' : '';
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
+
   return (
     <>
+      <Header
+        menuOpen={menuOpen}
+        onMenuToggle={() =>
+          setMenuOpen((current) => !current)
+        }
+      />
+
       <Sidebar
         mode="votante"
         seccionActiva={seccionActiva}
+        isOpen={menuOpen}
         onLogout={onLogout}
+        onNavigate={() => setMenuOpen(false)}
       />
 
-      <Header />
+      {menuOpen && (
+        <button
+          type="button"
+          className="dashboard-overlay"
+          aria-label="Cerrar menú"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
 
       <div className="main-layout-container">
         <main className="page-content">

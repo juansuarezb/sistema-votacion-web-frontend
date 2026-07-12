@@ -462,3 +462,170 @@
         align-items: stretch;
     }
 }
+
+/* ==========================================================================
+   RESPONSIVE ADICIONAL PARA PÁGINAS ADMINISTRATIVAS
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+    .admin-page {
+        max-width: 100%;
+    }
+
+    .admin-table-container {
+        max-width: calc(100vw - 364px);
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-page__header {
+        width: 100%;
+
+        align-items: stretch;
+        flex-direction: column;
+
+        gap: 18px;
+
+        margin-bottom: 22px;
+    }
+
+    .admin-page__title {
+        font-size: 28px;
+    }
+
+    .admin-page__description {
+        font-size: 16px;
+    }
+
+    .admin-page__header .admin-button {
+        width: 100%;
+    }
+
+    .admin-table-container {
+        width: 100%;
+        max-width: calc(100vw - 36px);
+
+        border-radius: 6px;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 900px;
+    }
+
+    .admin-form,
+    .admin-field {
+        width: 100%;
+        max-width: none;
+    }
+
+    .admin-actions {
+        flex-wrap: nowrap;
+    }
+
+    .admin-button {
+        min-height: 42px;
+
+        padding: 9px 14px;
+
+        font-size: 15px;
+    }
+
+    .admin-page__footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-page__footer .admin-button {
+        width: 100%;
+    }
+}
+/* ==========================================================================
+   RESPONSIVE ADICIONAL PARA PÁGINAS ADMINISTRATIVAS
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+    .admin-page {
+        max-width: 100%;
+    }
+
+    .admin-table-container {
+        max-width: calc(100vw - 364px);
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-page__header {
+        width: 100%;
+
+        align-items: stretch;
+        flex-direction: column;
+
+        gap: 18px;
+
+        margin-bottom: 22px;
+    }
+
+    .admin-page__title {
+        font-size: 28px;
+    }
+
+    .admin-page__description {
+        font-size: 16px;
+    }
+
+    .admin-page__header .admin-button {
+        width: 100%;
+    }
+
+    .admin-table-container {
+        width: 100%;
+        max-width: calc(100vw - 36px);
+
+        border-radius: 6px;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 900px;
+    }
+
+    .admin-form,
+    .admin-field {
+        width: 100%;
+        max-width: none;
+    }
+
+    .admin-actions {
+        flex-wrap: nowrap;
+    }
+
+    .admin-button {
+        min-height: 42px;
+
+        padding: 9px 14px;
+
+        font-size: 15px;
+    }
+
+    .admin-page__footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-page__footer .admin-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .admin-table-container {
+        max-width: calc(100vw - 28px);
+    }
+
+    .admin-page__title {
+        font-size: 25px;
+    }
+}

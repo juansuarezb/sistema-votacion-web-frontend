@@ -10,25 +10,30 @@ interface SidebarProps {
   mode?: 'votante' | 'admin';
   seccionActiva?: DashboardSection;
 
+  isOpen?: boolean;
+
   onGoToVotantes?: () => void;
   onGoToVotaciones?: () => void;
   onGoToResultados?: () => void;
 
   onLogout?: () => void;
+  onNavigate?: () => void;
 }
 
 export default function Sidebar({
   mode = 'votante',
   seccionActiva = 'votaciones',
+  isOpen = false,
   onGoToVotantes,
   onGoToVotaciones,
   onGoToResultados,
   onLogout,
+  onNavigate,
 }: SidebarProps) {
   const getItemClassName = (
     section: DashboardSection
-  ): string => {
-    return [
+  ): string =>
+    [
       'o-sidebar__item',
       seccionActiva === section
         ? 'o-sidebar__item--active'
@@ -36,19 +41,32 @@ export default function Sidebar({
     ]
       .filter(Boolean)
       .join(' ');
+
+  const executeNavigation = (
+    action?: () => void
+  ) => {
+    action?.();
+    onNavigate?.();
   };
 
   return (
-    <aside className="o-sidebar">
-      <nav
-        className="o-sidebar__menu"
-        aria-label="Navegación principal"
-      >
+    <aside
+      className={[
+        'o-sidebar',
+        isOpen ? 'o-sidebar--open' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      aria-label="Menú principal"
+    >
+      <nav className="o-sidebar__menu">
         {mode === 'admin' && (
           <button
             type="button"
             className={getItemClassName('votantes')}
-            onClick={onGoToVotantes}
+            onClick={() =>
+              executeNavigation(onGoToVotantes)
+            }
             aria-current={
               seccionActiva === 'votantes'
                 ? 'page'
@@ -70,7 +88,9 @@ export default function Sidebar({
         <button
           type="button"
           className={getItemClassName('votaciones')}
-          onClick={onGoToVotaciones}
+          onClick={() =>
+            executeNavigation(onGoToVotaciones)
+          }
           aria-current={
             seccionActiva === 'votaciones'
               ? 'page'
@@ -92,7 +112,9 @@ export default function Sidebar({
           <button
             type="button"
             className={getItemClassName('resultados')}
-            onClick={onGoToResultados}
+            onClick={() =>
+              executeNavigation(onGoToResultados)
+            }
             aria-current={
               seccionActiva === 'resultados'
                 ? 'page'
@@ -116,7 +138,9 @@ export default function Sidebar({
         <button
           type="button"
           className="o-sidebar__item"
-          onClick={onLogout}
+          onClick={() =>
+            executeNavigation(onLogout)
+          }
         >
           <Icon
             name="exit"

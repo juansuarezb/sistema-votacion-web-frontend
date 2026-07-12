@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
+
 import AdminLayout from '../../components/templates/AdminLayout';
+
 import {
   deleteReferendum,
   getReferendums,
   type Referendum,
 } from '../../services/referendumService';
+
+import './AdminPages.css';
 
 interface ListaVotacionesPageProps {
   onLogout: () => void;
@@ -42,7 +46,9 @@ export default function ListaVotacionesPage({
       console.error('Error al cargar votaciones:', err);
 
       if (err instanceof Error) {
-        setError(`No se pudieron cargar las votaciones: ${err.message}`);
+        setError(
+          `No se pudieron cargar las votaciones: ${err.message}`
+        );
       } else {
         setError('No se pudieron cargar las votaciones.');
       }
@@ -55,24 +61,57 @@ export default function ListaVotacionesPage({
     cargarReferendums();
   }, []);
 
-  const handleEliminar = async (idReferendum: number) => {
+  const handleEliminar = async (
+    idReferendum: number
+  ) => {
     const confirmar = window.confirm(
       '¿Seguro que deseas eliminar esta votación?'
     );
 
-    if (!confirmar) return;
+    if (!confirmar) {
+      return;
+    }
 
     try {
       await deleteReferendum(idReferendum);
       await cargarReferendums();
     } catch (err) {
-      console.error('Error al eliminar votación:', err);
+      console.error(
+        'Error al eliminar votación:',
+        err
+      );
 
       if (err instanceof Error) {
-        alert(`No se pudo eliminar la votación: ${err.message}`);
+        alert(
+          `No se pudo eliminar la votación: ${err.message}`
+        );
       } else {
         alert('No se pudo eliminar la votación.');
       }
+    }
+  };
+
+  const getStatusClassName = (
+    estado: string
+  ): string => {
+    const normalizedStatus =
+      estado.trim().toLowerCase();
+
+    switch (normalizedStatus) {
+      case 'activo':
+        return 'admin-status admin-status--activo';
+
+      case 'borrador':
+        return 'admin-status admin-status--borrador';
+
+      case 'cerrado':
+        return 'admin-status admin-status--cerrado';
+
+      case 'cancelado':
+        return 'admin-status admin-status--cancelado';
+
+      default:
+        return 'admin-status admin-status--borrador';
     }
   };
 
@@ -85,83 +124,168 @@ export default function ListaVotacionesPage({
       onGoToVotaciones={onGoToVotaciones}
       onGoToResultados={onGoToResultados}
     >
-      <h2>Gestión de Votaciones</h2>
+      <section className="admin-page">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-page__title">
+              Gestión de Votaciones
+            </h2>
 
-      <button type="button" onClick={onGoToCreate}>
-        Nueva Votación
-      </button>
+            <p className="admin-page__description">
+              Administra los referéndums, sus asignaciones y
+              resultados.
+            </p>
+          </div>
 
-      {cargando && <p>Cargando votaciones...</p>}
+          <button
+            type="button"
+            className="admin-button admin-button--primary"
+            onClick={onGoToCreate}
+          >
+            Nueva Votación
+          </button>
+        </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+        {cargando && (
+          <p className="admin-message admin-message--loading">
+            Cargando votaciones...
+          </p>
+        )}
 
-      {!cargando && !error && referendums.length === 0 && (
-        <p>No existen votaciones registradas.</p>
-      )}
+        {error && (
+          <p className="admin-error">
+            {error}
+          </p>
+        )}
 
-      {!cargando && !error && referendums.length > 0 && (
-        <table border={1} cellPadding={8} style={{ marginTop: '1rem' }}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Título</th>
-              <th>Descripción</th>
-              <th>Inicio</th>
-              <th>Cierre</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+        {!cargando &&
+          !error &&
+          referendums.length === 0 && (
+            <p className="admin-message admin-message--empty">
+              No existen votaciones registradas.
+            </p>
+          )}
 
-          <tbody>
-            {referendums.map((referendum) => (
-              <tr key={referendum.idReferendum}>
-                <td>{referendum.idReferendum}</td>
-                <td>{referendum.titulo}</td>
-                <td>{referendum.descripcion}</td>
-                <td>{new Date(referendum.fechaInicio).toLocaleString()}</td>
-                <td>{new Date(referendum.fechaCierre).toLocaleString()}</td>
-                <td>{referendum.estado}</td>
-                <td>
-                  <button
-                    type="button"
-                    onClick={() => onGoToEdit(referendum.idReferendum)}
-                  >
-                    Editar
-                  </button>
+        {!cargando &&
+          !error &&
+          referendums.length > 0 && (
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th>Inicio</th>
+                    <th>Cierre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
 
-                  {' '}
+                <tbody>
+                  {referendums.map(
+                    (referendum) => (
+                      <tr
+                        key={
+                          referendum.idReferendum
+                        }
+                      >
+                        <td>
+                          {referendum.idReferendum}
+                        </td>
 
-                  <button
-                    type="button"
-                    onClick={() => onGoToAssign(referendum.idReferendum)}
-                  >
-                    Asignar
-                  </button>
+                        <td>
+                          <strong>
+                            {referendum.titulo}
+                          </strong>
+                        </td>
 
-                  {' '}
+                        <td className="admin-table__description">
+                          {referendum.descripcion}
+                        </td>
 
-                  <button
-                    type="button"
-                    onClick={() => onGoToResults(referendum.idReferendum)}
-                  >
-                    Resultados
-                  </button>
+                        <td className="admin-table__date">
+                          {new Date(
+                            referendum.fechaInicio
+                          ).toLocaleString()}
+                        </td>
 
-                  {' '}
+                        <td className="admin-table__date">
+                          {new Date(
+                            referendum.fechaCierre
+                          ).toLocaleString()}
+                        </td>
 
-                  <button
-                    type="button"
-                    onClick={() => handleEliminar(referendum.idReferendum)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                        <td>
+                          <span
+                            className={getStatusClassName(
+                              referendum.estado
+                            )}
+                          >
+                            {referendum.estado}
+                          </span>
+                        </td>
+
+                        <td className="admin-table__actions">
+                          <div className="admin-actions">
+                            <button
+                              type="button"
+                              className="admin-button admin-button--secondary"
+                              onClick={() =>
+                                onGoToEdit(
+                                  referendum.idReferendum
+                                )
+                              }
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              className="admin-button admin-button--info"
+                              onClick={() =>
+                                onGoToAssign(
+                                  referendum.idReferendum
+                                )
+                              }
+                            >
+                              Asignar
+                            </button>
+
+                            <button
+                              type="button"
+                              className="admin-button admin-button--primary"
+                              onClick={() =>
+                                onGoToResults(
+                                  referendum.idReferendum
+                                )
+                              }
+                            >
+                              Resultados
+                            </button>
+
+                            <button
+                              type="button"
+                              className="admin-button admin-button--danger"
+                              onClick={() =>
+                                handleEliminar(
+                                  referendum.idReferendum
+                                )
+                              }
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+      </section>
     </AdminLayout>
   );
 }

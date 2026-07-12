@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
+
 import AdminLayout from '../../components/templates/AdminLayout';
+
 import {
   getReferendums,
   type Referendum,
 } from '../../services/referendumService';
+
 import {
   getResultsByReferendum,
   type ResultResponse,
 } from '../../services/resultService';
+
+import './AdminPages.css';
 
 interface VerResultadosPageProps {
   idReferendumInicial?: number;
@@ -26,14 +31,25 @@ export default function VerResultadosPage({
   onGoToVotaciones,
   onGoToResultados,
 }: VerResultadosPageProps) {
-  const [referendums, setReferendums] = useState<Referendum[]>([]);
-  const [idReferendum, setIdReferendum] = useState(
-    idReferendumInicial?.toString() ?? ''
-  );
-  const [resultado, setResultado] = useState<ResultResponse | null>(null);
-  const [cargando, setCargando] = useState(true);
-  const [consultando, setConsultando] = useState(false);
-  const [error, setError] = useState('');
+  const [referendums, setReferendums] =
+    useState<Referendum[]>([]);
+
+  const [idReferendum, setIdReferendum] =
+    useState(
+      idReferendumInicial?.toString() ?? ''
+    );
+
+  const [resultado, setResultado] =
+    useState<ResultResponse | null>(null);
+
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [consultando, setConsultando] =
+    useState(false);
+
+  const [error, setError] =
+    useState('');
 
   useEffect(() => {
     async function cargarReferendums() {
@@ -44,16 +60,28 @@ export default function VerResultadosPage({
         const data = await getReferendums();
         setReferendums(data);
 
-        if (!idReferendumInicial && data.length > 0) {
-          setIdReferendum(data[0].idReferendum.toString());
+        if (
+          !idReferendumInicial &&
+          data.length > 0
+        ) {
+          setIdReferendum(
+            data[0].idReferendum.toString()
+          );
         }
       } catch (err) {
-        console.error('Error al cargar referendums:', err);
+        console.error(
+          'Error al cargar referéndums:',
+          err
+        );
 
         if (err instanceof Error) {
-          setError(`No se pudieron cargar las votaciones: ${err.message}`);
+          setError(
+            `No se pudieron cargar las votaciones: ${err.message}`
+          );
         } else {
-          setError('No se pudieron cargar las votaciones.');
+          setError(
+            'No se pudieron cargar las votaciones.'
+          );
         }
       } finally {
         setCargando(false);
@@ -65,31 +93,51 @@ export default function VerResultadosPage({
 
   useEffect(() => {
     if (idReferendum) {
-      consultarResultados(Number(idReferendum));
+      consultarResultados(
+        Number(idReferendum)
+      );
     }
   }, [idReferendum]);
 
-  const consultarResultados = async (id: number) => {
+  const consultarResultados = async (
+    id: number
+  ) => {
     try {
       setConsultando(true);
       setError('');
 
-      const data = await getResultsByReferendum(id);
+      const data =
+        await getResultsByReferendum(id);
+
       setResultado(data);
     } catch (err) {
-      console.error('Error al consultar resultados:', err);
+      console.error(
+        'Error al consultar resultados:',
+        err
+      );
 
       setResultado(null);
 
       if (err instanceof Error) {
-        setError(`No se pudieron consultar los resultados: ${err.message}`);
+        setError(
+          `No se pudieron consultar los resultados: ${err.message}`
+        );
       } else {
-        setError('No se pudieron consultar los resultados.');
+        setError(
+          'No se pudieron consultar los resultados.'
+        );
       }
     } finally {
       setConsultando(false);
     }
   };
+
+  const referendumSeleccionado =
+    referendums.find(
+      (referendum) =>
+        referendum.idReferendum ===
+        Number(idReferendum)
+    );
 
   return (
     <AdminLayout
@@ -100,73 +148,165 @@ export default function VerResultadosPage({
       onGoToVotaciones={onGoToVotaciones}
       onGoToResultados={onGoToResultados}
     >
-      <h2>Resultados</h2>
-
-      {cargando && <p>Cargando votaciones...</p>}
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {!cargando && referendums.length === 0 && (
-        <p>No existen votaciones registradas.</p>
-      )}
-
-      {!cargando && referendums.length > 0 && (
-        <>
+      <section className="admin-page">
+        <div className="admin-page__header">
           <div>
-            <label>Seleccione una votación</label>
-            <br />
-            <select
-              value={idReferendum}
-              onChange={(event) => setIdReferendum(event.target.value)}
-            >
-              {referendums.map((referendum) => (
-                <option
-                  key={referendum.idReferendum}
-                  value={referendum.idReferendum}
-                >
-                  {referendum.titulo}
-                </option>
-              ))}
-            </select>
+            <h2 className="admin-page__title">
+              Resultados
+            </h2>
+
+            <p className="admin-page__description">
+              Consulta el resumen de votos de cada
+              referéndum.
+            </p>
           </div>
+        </div>
 
-          {consultando && <p>Consultando resultados...</p>}
+        {cargando && (
+          <p className="admin-message admin-message--loading">
+            Cargando votaciones...
+          </p>
+        )}
 
-          {resultado && (
-            <table border={1} cellPadding={8} style={{ marginTop: '1rem' }}>
-              <thead>
-                <tr>
-                  <th>Referéndum</th>
-                  <th>SI</th>
-                  <th>NO</th>
-                  <th>BLANCO</th>
-                  <th>NULO</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
+        {error && (
+          <p className="admin-error">
+            {error}
+          </p>
+        )}
 
-              <tbody>
-                <tr>
-                  <td>{resultado.idReferendum}</td>
-                  <td>{resultado.totalSi}</td>
-                  <td>{resultado.totalNo}</td>
-                  <td>{resultado.totalBlanco}</td>
-                  <td>{resultado.totalNulo}</td>
-                  <td>{resultado.totalVotos}</td>
-                </tr>
-              </tbody>
-            </table>
+        {!cargando &&
+          referendums.length === 0 && (
+            <p className="admin-message admin-message--empty">
+              No existen votaciones registradas.
+            </p>
           )}
 
-          <br />
+        {!cargando &&
+          referendums.length > 0 && (
+            <>
+              <div className="admin-field">
+                <label
+                  htmlFor="referendum-resultados"
+                  className="admin-field__label"
+                >
+                  Seleccione una votación
+                </label>
 
-          {onBack && (
-            <button type="button" onClick={onBack}>
-              Volver
-            </button>
+                <select
+                  id="referendum-resultados"
+                  className="admin-select"
+                  value={idReferendum}
+                  onChange={(event) =>
+                    setIdReferendum(
+                      event.target.value
+                    )
+                  }
+                >
+                  {referendums.map(
+                    (referendum) => (
+                      <option
+                        key={
+                          referendum.idReferendum
+                        }
+                        value={
+                          referendum.idReferendum
+                        }
+                      >
+                        {referendum.titulo}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+
+              {consultando && (
+                <p className="admin-message admin-message--loading">
+                  Consultando resultados...
+                </p>
+              )}
+
+              {!consultando &&
+                resultado && (
+                  <div className="admin-results-summary">
+                    {referendumSeleccionado && (
+                      <p className="admin-page__description">
+                        Resultados de:
+                        {' '}
+                        <strong>
+                          {
+                            referendumSeleccionado.titulo
+                          }
+                        </strong>
+                      </p>
+                    )}
+
+                    <div className="admin-table-container">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Referéndum</th>
+                            <th>SÍ</th>
+                            <th>NO</th>
+                            <th>BLANCO</th>
+                            <th>NULO</th>
+                            <th>Total</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          <tr>
+                            <td>
+                              {
+                                resultado.idReferendum
+                              }
+                            </td>
+
+                            <td className="admin-result-number">
+                              {resultado.totalSi}
+                            </td>
+
+                            <td className="admin-result-number">
+                              {resultado.totalNo}
+                            </td>
+
+                            <td className="admin-result-number">
+                              {
+                                resultado.totalBlanco
+                              }
+                            </td>
+
+                            <td className="admin-result-number">
+                              {
+                                resultado.totalNulo
+                              }
+                            </td>
+
+                            <td className="admin-result-number admin-result-total">
+                              {
+                                resultado.totalVotos
+                              }
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+              {onBack && (
+                <div className="admin-page__footer">
+                  <button
+                    type="button"
+                    className="admin-button admin-button--back"
+                    onClick={onBack}
+                  >
+                    Volver
+                  </button>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+      </section>
     </AdminLayout>
   );
 }

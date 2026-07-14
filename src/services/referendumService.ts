@@ -48,13 +48,13 @@ export interface CreateQuestionRequest {
 }
 
 export interface EligibilityResponse {
-  idReferendum?: number;
-  idQuestion?: number;
-  idVotante?: number;
-  asignado?: boolean;
-  haVotado?: boolean;
-  puedeVotar?: boolean;
-  mensaje?: string;
+  idReferendum: number;
+  idQuestion: number;
+  idVotante: number;
+  asignado: boolean;
+  haVotado: boolean;
+  puedeVotar: boolean;
+  mensaje: string;
 }
 
 export function getReferendums(): Promise<
@@ -157,7 +157,7 @@ export function getQuestionEligibility(
   idReferendum: number,
   idQuestion: number,
   idVotante: number
-): Promise<EligibilityResponse> {
+) {
   return apiRequest<EligibilityResponse>(
     `/api/referendums/${idReferendum}/questions/${idQuestion}/voters/${idVotante}/eligibility`
   );

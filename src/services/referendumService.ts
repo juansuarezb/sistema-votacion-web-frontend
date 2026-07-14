@@ -57,6 +57,16 @@ export interface EligibilityResponse {
   mensaje: string;
 }
 
+export interface VoterAssignmentStatus {
+  idVotante: number;
+  asignado: boolean;
+  haCompletado: boolean;
+  totalPreguntas: number;
+  preguntasRespondidas: number;
+  preguntasPendientes: number;
+  estado: 'ASIGNADO' | 'COMPLETADO';
+}
+
 export function getReferendums(): Promise<
   Referendum[]
 > {
@@ -153,6 +163,8 @@ export function getAssignedReferendumsByVoter(
   );
 }
 
+
+
 export function getQuestionEligibility(
   idReferendum: number,
   idQuestion: number,
@@ -160,5 +172,14 @@ export function getQuestionEligibility(
 ) {
   return apiRequest<EligibilityResponse>(
     `/api/referendums/${idReferendum}/questions/${idQuestion}/voters/${idVotante}/eligibility`
+  );
+  
+}
+
+export function getVoterAssignmentStatuses(
+  idReferendum: number
+): Promise<VoterAssignmentStatus[]> {
+  return apiRequest<VoterAssignmentStatus[]>(
+    `/api/referendums/${idReferendum}/voters/status`
   );
 }

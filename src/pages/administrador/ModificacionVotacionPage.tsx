@@ -7,6 +7,7 @@ import {
   updateReferendum,
   type ReferendumQuestion,
 } from '../../services/referendumService';
+import './AdminPages.css';
 
 interface ModificacionVotacionPageProps {
   idReferendum: number;
@@ -44,7 +45,9 @@ export default function ModificacionVotacionPage({
   const [nuevaPregunta, setNuevaPregunta] = useState('');
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [agregandoPregunta, setAgregandoPregunta] = useState(false);
   const [error, setError] = useState('');
+  const [mensaje, setMensaje] = useState('');
 
   const cargarDatos = async () => {
     try {
@@ -74,7 +77,7 @@ export default function ModificacionVotacionPage({
   };
 
   useEffect(() => {
-    cargarDatos();
+    void cargarDatos();
   }, [idReferendum]);
 
   const validar = () => {
@@ -82,6 +85,7 @@ export default function ModificacionVotacionPage({
     if (!descripcion.trim()) return 'La descripción es obligatoria.';
     if (!fechaInicio) return 'La fecha de inicio es obligatoria.';
     if (!fechaCierre) return 'La fecha de cierre es obligatoria.';
+
     if (new Date(fechaCierre) <= new Date(fechaInicio)) {
       return 'La fecha de cierre debe ser posterior a la fecha de inicio.';
     }
@@ -102,6 +106,7 @@ export default function ModificacionVotacionPage({
     try {
       setGuardando(true);
       setError('');
+      setMensaje('');
 
       await updateReferendum(idReferendum, {
         titulo,
@@ -127,25 +132,33 @@ export default function ModificacionVotacionPage({
 
   const handleAgregarPregunta = async () => {
     if (!nuevaPregunta.trim()) {
-      alert('Ingrese el texto de la pregunta.');
+      setError('Ingrese el texto de la nueva pregunta.');
       return;
     }
 
     try {
+      setAgregandoPregunta(true);
+      setError('');
+      setMensaje('');
+
       await createReferendumQuestion(idReferendum, {
-        texto: nuevaPregunta,
+        texto: nuevaPregunta.trim(),
       });
 
       setNuevaPregunta('');
       await cargarDatos();
+
+      setMensaje('Pregunta agregada correctamente.');
     } catch (err) {
       console.error('Error al agregar pregunta:', err);
 
       if (err instanceof Error) {
-        alert(`No se pudo agregar la pregunta: ${err.message}`);
+        setError(`No se pudo agregar la pregunta: ${err.message}`);
       } else {
-        alert('No se pudo agregar la pregunta.');
+        setError('No se pudo agregar la pregunta.');
       }
+    } finally {
+      setAgregandoPregunta(false);
     }
   };
 
@@ -158,112 +171,197 @@ export default function ModificacionVotacionPage({
       onGoToVotaciones={onGoToVotaciones}
       onGoToResultados={onGoToResultados}
     >
-      <h2>Editar Votación</h2>
-
-      {cargando && <p>Cargando votación...</p>}
-
-      {!cargando && (
-        <>
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label>Título</label>
-              <br />
-              <input
-                value={titulo}
-                onChange={(event) => setTitulo(event.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label>Descripción</label>
-              <br />
-              <textarea
-                value={descripcion}
-                onChange={(event) => setDescripcion(event.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label>Fecha inicio</label>
-              <br />
-              <input
-                type="datetime-local"
-                value={fechaInicio}
-                onChange={(event) => setFechaInicio(event.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label>Fecha cierre</label>
-              <br />
-              <input
-                type="datetime-local"
-                value={fechaCierre}
-                onChange={(event) => setFechaCierre(event.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label>Estado</label>
-              <br />
-              <select
-                value={estado}
-                onChange={(event) => setEstado(event.target.value)}
-              >
-                <option value="BORRADOR">BORRADOR</option>
-                <option value="ACTIVO">ACTIVO</option>
-                <option value="CERRADO">CERRADO</option>
-                <option value="CANCELADO">CANCELADO</option>
-              </select>
-            </div>
-
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-
-            <br />
-
-            <button type="submit" disabled={guardando}>
-              {guardando ? 'Guardando...' : 'Actualizar'}
-            </button>
-
-            {' '}
-
-            <button type="button" onClick={onBack}>
-              Volver
-            </button>
-          </form>
-
-          <hr />
-
-          <h3>Preguntas</h3>
-
-          {preguntas.length === 0 && <p>No hay preguntas registradas.</p>}
-
-          <ul>
-            {preguntas.map((pregunta) => (
-              <li key={pregunta.idQuestion}>{pregunta.texto}</li>
-            ))}
-          </ul>
-
+      <section className="admin-page">
+        <div className="admin-page__header">
           <div>
-            <label>Nueva pregunta</label>
-            <br />
-            <input
-              value={nuevaPregunta}
-              onChange={(event) => setNuevaPregunta(event.target.value)}
-            />
+            <h2 className="admin-page__title">Editar Votación</h2>
 
-            {' '}
-
-            <button type="button" onClick={handleAgregarPregunta}>
-              Agregar pregunta
-            </button>
+            <p className="admin-page__description">
+              Modifique la información general y administre las preguntas del
+              referéndum.
+            </p>
           </div>
-        </>
-      )}
+        </div>
+
+        {cargando && (
+          <p className="admin-message admin-message--loading">
+            Cargando votación...
+          </p>
+        )}
+
+        {error && (
+          <p className="admin-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        {mensaje && (
+          <p className="admin-success">
+            {mensaje}
+          </p>
+        )}
+
+        {!cargando && (
+          <>
+            <form className="admin-form" onSubmit={handleSubmit}>
+              <div className="admin-form__group">
+                <label htmlFor="titulo">Título</label>
+
+                <input
+                  id="titulo"
+                  type="text"
+                  value={titulo}
+                  onChange={(event) => setTitulo(event.target.value)}
+                  maxLength={200}
+                  required
+                />
+              </div>
+
+              <div className="admin-form__group">
+                <label htmlFor="descripcion">Descripción</label>
+
+                <textarea
+                  id="descripcion"
+                  value={descripcion}
+                  onChange={(event) => setDescripcion(event.target.value)}
+                  maxLength={1000}
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="admin-form__row">
+                <div className="admin-form__group">
+                  <label htmlFor="fechaInicio">Fecha de inicio</label>
+
+                  <input
+                    id="fechaInicio"
+                    type="datetime-local"
+                    value={fechaInicio}
+                    onChange={(event) => setFechaInicio(event.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="admin-form__group">
+                  <label htmlFor="fechaCierre">Fecha de cierre</label>
+
+                  <input
+                    id="fechaCierre"
+                    type="datetime-local"
+                    value={fechaCierre}
+                    onChange={(event) => setFechaCierre(event.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="admin-form__group">
+                <label htmlFor="estado">Estado</label>
+
+                <select
+                  id="estado"
+                  value={estado}
+                  onChange={(event) => setEstado(event.target.value)}
+                >
+                  <option value="BORRADOR">BORRADOR</option>
+                  <option value="ACTIVO">ACTIVO</option>
+                  <option value="CERRADO">CERRADO</option>
+                  <option value="CANCELADO">CANCELADO</option>
+                </select>
+              </div>
+
+              <div className="admin-page__footer">
+                <button
+                  type="submit"
+                  className="admin-button admin-button--primary"
+                  disabled={guardando || agregandoPregunta}
+                >
+                  {guardando ? 'Guardando...' : 'Actualizar votación'}
+                </button>
+
+                <button
+                  type="button"
+                  className="admin-button admin-button--secondary"
+                  onClick={onBack}
+                  disabled={guardando || agregandoPregunta}
+                >
+                  Volver
+                </button>
+              </div>
+            </form>
+
+            <section className="admin-questions">
+              <div className="admin-questions__header">
+                <div>
+                  <h3 className="admin-questions__title">
+                    Preguntas
+                  </h3>
+
+                  <p className="admin-questions__description">
+                    Preguntas actualmente registradas en el referéndum.
+                  </p>
+                </div>
+
+                <span className="admin-questions__counter">
+                  {preguntas.length}
+                </span>
+              </div>
+
+              {preguntas.length === 0 ? (
+                <p className="admin-message admin-message--empty">
+                  No hay preguntas registradas.
+                </p>
+              ) : (
+                <ol className="admin-questions__list">
+                  {preguntas.map((pregunta) => (
+                    <li
+                      key={pregunta.idQuestion}
+                      className="admin-questions__item"
+                    >
+                      {pregunta.texto}
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              <div className="admin-question-create">
+                <div className="admin-form__group">
+                  <label htmlFor="nuevaPregunta">
+                    Nueva pregunta
+                  </label>
+
+                  <textarea
+                    id="nuevaPregunta"
+                    value={nuevaPregunta}
+                    onChange={(event) =>
+                      setNuevaPregunta(event.target.value)
+                    }
+                    placeholder="Escriba el texto de la nueva pregunta."
+                    rows={3}
+                    maxLength={500}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  className="admin-button admin-button--info"
+                  onClick={handleAgregarPregunta}
+                  disabled={
+                    agregandoPregunta ||
+                    guardando ||
+                    !nuevaPregunta.trim()
+                  }
+                >
+                  {agregandoPregunta
+                    ? 'Agregando...'
+                    : 'Agregar pregunta'}
+                </button>
+              </div>
+            </section>
+          </>
+        )}
+      </section>
     </AdminLayout>
   );
 }

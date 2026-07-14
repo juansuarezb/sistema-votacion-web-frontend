@@ -4,6 +4,7 @@ import {
   createReferendum,
   createReferendumQuestion,
 } from '../../services/referendumService';
+import './AdminPages.css';
 
 interface CreacionVotacionPageProps {
   onLogout: () => void;
@@ -36,13 +37,14 @@ export default function CreacionVotacionPage({
     if (!descripcion.trim()) return 'La descripción es obligatoria.';
     if (!fechaInicio) return 'La fecha de inicio es obligatoria.';
     if (!fechaCierre) return 'La fecha de cierre es obligatoria.';
+
     if (new Date(fechaCierre) <= new Date(fechaInicio)) {
       return 'La fecha de cierre debe ser posterior a la fecha de inicio.';
     }
 
     const preguntas = preguntasTexto
       .split('\n')
-      .map((p) => p.trim())
+      .map((pregunta) => pregunta.trim())
       .filter(Boolean);
 
     if (preguntas.length === 0) {
@@ -76,7 +78,7 @@ export default function CreacionVotacionPage({
 
       const preguntas = preguntasTexto
         .split('\n')
-        .map((p) => p.trim())
+        .map((pregunta) => pregunta.trim())
         .filter(Boolean);
 
       for (const pregunta of preguntas) {
@@ -108,90 +110,135 @@ export default function CreacionVotacionPage({
       onGoToVotaciones={onGoToVotaciones}
       onGoToResultados={onGoToResultados}
     >
-      <h2>Crear Votación</h2>
+      <section className="admin-page">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-page__title">Crear Votación</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Título</label>
-          <br />
-          <input
-            value={titulo}
-            onChange={(event) => setTitulo(event.target.value)}
-            required
-          />
+            <p className="admin-page__description">
+              Configure el referéndum, su periodo de vigencia y las preguntas
+              que deberán responder los votantes.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <label>Descripción</label>
-          <br />
-          <textarea
-            value={descripcion}
-            onChange={(event) => setDescripcion(event.target.value)}
-            required
-          />
-        </div>
+        <form className="admin-form" onSubmit={handleSubmit}>
+          <div className="admin-form__group">
+            <label htmlFor="titulo">Título</label>
 
-        <div>
-          <label>Fecha inicio</label>
-          <br />
-          <input
-            type="datetime-local"
-            value={fechaInicio}
-            onChange={(event) => setFechaInicio(event.target.value)}
-            required
-          />
-        </div>
+            <input
+              id="titulo"
+              type="text"
+              value={titulo}
+              onChange={(event) => setTitulo(event.target.value)}
+              placeholder="Ej. Consulta de presupuesto estudiantil"
+              maxLength={200}
+              required
+            />
+          </div>
 
-        <div>
-          <label>Fecha cierre</label>
-          <br />
-          <input
-            type="datetime-local"
-            value={fechaCierre}
-            onChange={(event) => setFechaCierre(event.target.value)}
-            required
-          />
-        </div>
+          <div className="admin-form__group">
+            <label htmlFor="descripcion">Descripción</label>
 
-        <div>
-          <label>Estado</label>
-          <br />
-          <select
-            value={estado}
-            onChange={(event) => setEstado(event.target.value)}
-          >
-            <option value="BORRADOR">BORRADOR</option>
-            <option value="ACTIVO">ACTIVO</option>
-            <option value="CERRADO">CERRADO</option>
-            <option value="CANCELADO">CANCELADO</option>
-          </select>
-        </div>
+            <textarea
+              id="descripcion"
+              value={descripcion}
+              onChange={(event) => setDescripcion(event.target.value)}
+              placeholder="Describa brevemente el objetivo de la votación."
+              maxLength={1000}
+              rows={4}
+              required
+            />
+          </div>
 
-        <div>
-          <label>Preguntas, una por línea</label>
-          <br />
-          <textarea
-            value={preguntasTexto}
-            onChange={(event) => setPreguntasTexto(event.target.value)}
-            rows={6}
-            required
-          />
-        </div>
+          <div className="admin-form__row">
+            <div className="admin-form__group">
+              <label htmlFor="fechaInicio">Fecha de inicio</label>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+              <input
+                id="fechaInicio"
+                type="datetime-local"
+                value={fechaInicio}
+                onChange={(event) => setFechaInicio(event.target.value)}
+                required
+              />
+            </div>
 
-        <br />
+            <div className="admin-form__group">
+              <label htmlFor="fechaCierre">Fecha de cierre</label>
 
-        <button type="submit" disabled={guardando}>
-          {guardando ? 'Guardando...' : 'Guardar'}
-        </button>
+              <input
+                id="fechaCierre"
+                type="datetime-local"
+                value={fechaCierre}
+                onChange={(event) => setFechaCierre(event.target.value)}
+                required
+              />
+            </div>
+          </div>
 
-        {' '}
+          <div className="admin-form__group">
+            <label htmlFor="estado">Estado inicial</label>
 
-        <button type="button" onClick={onBack}>
-          Volver
-        </button>
-      </form>
+            <select
+              id="estado"
+              value={estado}
+              onChange={(event) => setEstado(event.target.value)}
+            >
+              <option value="BORRADOR">BORRADOR</option>
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="CERRADO">CERRADO</option>
+              <option value="CANCELADO">CANCELADO</option>
+            </select>
+          </div>
+
+          <div className="admin-form__group">
+            <label htmlFor="preguntas">
+              Preguntas del referéndum
+            </label>
+
+            <textarea
+              id="preguntas"
+              value={preguntasTexto}
+              onChange={(event) => setPreguntasTexto(event.target.value)}
+              placeholder={
+                'Escriba una pregunta por línea.\nEjemplo:\n¿Aprueba la propuesta presentada?\n¿Está de acuerdo con el presupuesto?'
+              }
+              rows={7}
+              required
+            />
+
+            <small className="admin-form__help">
+              Cada línea será registrada como una pregunta independiente.
+            </small>
+          </div>
+
+          {error && (
+            <p className="admin-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="admin-page__footer">
+            <button
+              type="submit"
+              className="admin-button admin-button--primary"
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : 'Guardar votación'}
+            </button>
+
+            <button
+              type="button"
+              className="admin-button admin-button--secondary"
+              onClick={onBack}
+              disabled={guardando}
+            >
+              Volver
+            </button>
+          </div>
+        </form>
+      </section>
     </AdminLayout>
   );
 }

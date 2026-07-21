@@ -1,5 +1,6 @@
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 80px;
 }
 
 .landing-container {
@@ -7,4 +8,6 @@ html {
     display: flex;
     flex-direction: column;
     background-color: var(--color-bg-page);
+    position: relative;
 }
+

@@ -38,3 +38,39 @@
     cursor: pointer;
     user-select: none;
 }
+
+.text-field-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+}
+
+.text-field-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 4px;
+}
+
+.text-field-label {
+    font-family: var(--font-primary);
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563; /* tailwind gray-600 */
+}
+
+.text-field-error {
+    font-family: var(--font-primary);
+    font-size: 13px;
+    font-weight: 500;
+    color: #ef4444; /* tailwind red-500 */
+}
+
+.has-error .box-large-input {
+    border-color: #ef4444;
+}
+
+.has-error .box-large-input:focus {
+    box-shadow: 0px 4px 8px rgba(239, 68, 68, 0.25);
+}

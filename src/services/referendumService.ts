@@ -4,6 +4,7 @@ export interface Referendum {
   idReferendum: number;
   titulo: string;
   descripcion: string;
+  imagenUrl?: string;
   fechaInicio: string;
   fechaCierre: string;
   estado: string;
@@ -14,6 +15,7 @@ export interface AssignedReferendum {
   idReferendum: number;
   titulo: string;
   descripcion: string;
+  imagenUrl?: string;
   fechaInicio: string;
   fechaCierre: string;
   estado: string;
@@ -21,15 +23,24 @@ export interface AssignedReferendum {
   preguntasPendientes: number;
 }
 
+export interface Candidate {
+  idCandidate: number;
+  idQuestion: number;
+  nombre: string;
+  imagenUrl?: string;
+}
+
 export interface ReferendumQuestion {
   idQuestion: number;
   idReferendum: number;
   texto: string;
+  candidatos?: Candidate[];
 }
 
 export interface CreateReferendumRequest {
   titulo: string;
   descripcion: string;
+  imagenUrl?: string;
   fechaInicio: string;
   fechaCierre: string;
   estado: string;
@@ -38,6 +49,7 @@ export interface CreateReferendumRequest {
 export interface UpdateReferendumRequest {
   titulo: string;
   descripcion: string;
+  imagenUrl?: string;
   fechaInicio: string;
   fechaCierre: string;
   estado: string;
@@ -45,6 +57,15 @@ export interface UpdateReferendumRequest {
 
 export interface CreateQuestionRequest {
   texto: string;
+}
+
+export interface UpdateQuestionRequest {
+  texto: string;
+}
+
+export interface CreateCandidateRequest {
+  nombre: string;
+  imagenUrl?: string;
 }
 
 export interface EligibilityResponse {
@@ -136,6 +157,74 @@ export function createReferendumQuestion(
     {
       method: "POST",
       body: JSON.stringify(data),
+    }
+  );
+}
+
+export function updateReferendumQuestion(
+  idReferendum: number,
+  idQuestion: number,
+  data: UpdateQuestionRequest
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/referendums/${idReferendum}/questions/${idQuestion}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export function deleteReferendumQuestion(
+  idReferendum: number,
+  idQuestion: number
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/referendums/${idReferendum}/questions/${idQuestion}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+export function createReferendumCandidate(
+  idReferendum: number,
+  idQuestion: number,
+  data: CreateCandidateRequest
+): Promise<Candidate> {
+  return apiRequest<Candidate>(
+    `/api/referendums/${idReferendum}/questions/${idQuestion}/candidates`,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export function updateReferendumCandidate(
+  idReferendum: number,
+  idQuestion: number,
+  idCandidate: number,
+  data: CreateCandidateRequest
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/referendums/${idReferendum}/questions/${idQuestion}/candidates/${idCandidate}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export function deleteReferendumCandidate(
+  idReferendum: number,
+  idQuestion: number,
+  idCandidate: number
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/referendums/${idReferendum}/questions/${idQuestion}/candidates/${idCandidate}`,
+    {
+      method: "DELETE",
     }
   );
 }

@@ -4,31 +4,38 @@ import './Sidebar.css';
 export type DashboardSection =
   | 'votantes'
   | 'votaciones'
-  | 'resultados';
+  | 'resultados'
+  | 'historial';
 
 interface SidebarProps {
   mode?: 'votante' | 'admin';
   seccionActiva?: DashboardSection;
 
   isOpen?: boolean;
+  isDesktopCollapsed?: boolean;
 
   onGoToVotantes?: () => void;
   onGoToVotaciones?: () => void;
   onGoToResultados?: () => void;
+  onGoToHistorial?: () => void;
 
   onLogout?: () => void;
   onNavigate?: () => void;
+  onToggleDesktopCollapse?: () => void;
 }
 
 export default function Sidebar({
   mode = 'votante',
   seccionActiva = 'votaciones',
   isOpen = false,
+  isDesktopCollapsed = false,
   onGoToVotantes,
   onGoToVotaciones,
   onGoToResultados,
+  onGoToHistorial,
   onLogout,
   onNavigate,
+  onToggleDesktopCollapse,
 }: SidebarProps) {
   const getItemClassName = (
     section: DashboardSection
@@ -54,11 +61,15 @@ export default function Sidebar({
       className={[
         'o-sidebar',
         isOpen ? 'o-sidebar--open' : '',
+        isDesktopCollapsed ? 'o-sidebar--collapsed' : '',
       ]
         .filter(Boolean)
         .join(' ')}
       aria-label="Menú principal"
     >
+      <div className="o-sidebar__toggle-desktop" onClick={onToggleDesktopCollapse} title={isDesktopCollapsed ? "Expandir menú" : "Contraer menú"}>
+        <Icon name={isDesktopCollapsed ? "right" : "left"} alt={isDesktopCollapsed ? "Expandir menú" : "Contraer menú"} size={20} />
+      </div>
       <nav className="o-sidebar__menu">
         {mode === 'admin' && (
           <button
@@ -107,6 +118,31 @@ export default function Sidebar({
             Votaciones
           </span>
         </button>
+
+        {mode === 'votante' && (
+          <button
+            type="button"
+            className={getItemClassName('historial')}
+            onClick={() =>
+              executeNavigation(onGoToHistorial)
+            }
+            aria-current={
+              seccionActiva === 'historial'
+                ? 'page'
+                : undefined
+            }
+          >
+            <Icon
+              name="registro"
+              alt=""
+              size={40}
+            />
+
+            <span className="o-sidebar__text">
+              Historial
+            </span>
+          </button>
+        )}
 
         {mode === 'admin' && (
           <button

@@ -15,12 +15,13 @@ interface RespuestaVoto {
   idQuestion: number;
   numeroPregunta: number;
   textoPregunta: string;
-  tipoVoto: TipoVoto;
+  tipoVoto: TipoVoto | string;
+  nombreCandidato?: string;
 }
 
 interface ConfirmacionVotoPageProps {
   onVolverAVotacion: () => void;
-  onFinalizarSesion: () => void;
+  onVotacionCompletada: () => void;
   onLogout: () => void;
 }
 
@@ -71,7 +72,7 @@ function guardarVotosRegistrados(
 
 export default function ConfirmacionVotoPage({
   onVolverAVotacion,
-  onFinalizarSesion,
+  onVotacionCompletada,
   onLogout,
 }: ConfirmacionVotoPageProps) {
   const [finalizando, setFinalizando] = useState(false);
@@ -184,7 +185,7 @@ export default function ConfirmacionVotoPage({
       localStorage.removeItem('votosRegistrados');
       localStorage.removeItem('ultimoVoto');
 
-      onFinalizarSesion();
+      onVotacionCompletada();
     } catch (err) {
       console.error(
         'Error al finalizar votación:',
@@ -207,141 +208,111 @@ export default function ConfirmacionVotoPage({
 
   return (
     <VotanteLayout onLogout={onLogout}>
-      <div className="confirm-wrapper">
-        <h1 className="confirm-title">
-          REVISAR VOTO
-        </h1>
-
-        <div style={{ margin: '10px 0 30px 0' }}>
-          <svg
-            width="70"
-            height="70"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#0d47a1"
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M9 11l3 3L22 4" />
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-          </svg>
+      <div className="confirm-wrapper" style={{ padding: '40px 20px', maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
+        
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '80px', height: '80px', backgroundColor: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2563eb"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+          </div>
         </div>
 
-        <div className="certification-box">
-          <p className="confirm-p">
-            Revise sus respuestas antes de finalizar
-            la votación.
-          </p>
+        <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b', margin: '0 0 12px' }}>
+          Revise sus respuestas
+        </h1>
+        
+        <p style={{ fontSize: '18px', color: '#64748b', margin: '0 0 32px' }}>
+          Está a un paso de completar su participación. Verifique que sus respuestas sean correctas.
+        </p>
 
-          <p
-            style={{
-              color: '#b71c1c',
-              fontWeight: 'bold',
-            }}
-          >
-            Una vez finalizada la votación, no podrá
-            modificar sus respuestas.
-          </p>
+        <div className="certification-box" style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginBottom: '32px', textAlign: 'left' }}>
+          
+          <div style={{ backgroundColor: '#fff8f1', borderLeft: '4px solid #f97316', padding: '16px', borderRadius: '0 8px 8px 0', marginBottom: '24px' }}>
+            <p style={{ margin: 0, color: '#9a3412', fontSize: '15px', fontWeight: 600 }}>
+              Atención: Una vez finalizada la votación, su voto quedará registrado permanentemente y no podrá ser modificado.
+            </p>
+          </div>
 
           {error && (
-            <p
-              role="alert"
-              style={{
-                color: 'red',
-                fontWeight: 'bold',
-              }}
-            >
-              {error}
-            </p>
+            <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fca5a5', padding: '16px', borderRadius: '8px', marginBottom: '24px' }}>
+              <p role="alert" style={{ margin: 0, color: '#b91c1c', fontWeight: 600, fontSize: '15px' }}>
+                {error}
+              </p>
+            </div>
           )}
 
           {respuestas.length > 0 ? (
-            <div
-              style={{
-                textAlign: 'left',
-                marginBottom: '24px',
-              }}
-            >
-              <h3>
-                Resumen de respuestas seleccionadas
+            <div>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#334155', margin: '0 0 20px', borderBottom: '2px solid #f1f5f9', paddingBottom: '12px' }}>
+                Resumen de sus selecciones
               </h3>
 
-              {respuestas.map((respuesta) => (
-                <div
-                  key={obtenerClaveRespuesta(
-                    respuesta.idReferendum,
-                    respuesta.idQuestion
-                  )}
-                  style={{
-                    borderBottom: '1px solid #ddd',
-                    paddingBottom: '12px',
-                    marginBottom: '12px',
-                  }}
-                >
-                  <p>
-                    <strong>
-                      Pregunta {respuesta.numeroPregunta}:
-                    </strong>{' '}
-                    {respuesta.textoPregunta}
-                  </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {respuestas.map((respuesta) => (
+                  <div
+                    key={obtenerClaveRespuesta(respuesta.idReferendum, respuesta.idQuestion)}
+                    style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0'
+                    }}
+                  >
+                    <p style={{ margin: '0 0 8px', fontSize: '14px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Pregunta {respuesta.numeroPregunta}
+                    </p>
+                    <p style={{ margin: '0 0 16px', fontSize: '17px', color: '#1e293b', fontWeight: 500 }}>
+                      {respuesta.textoPregunta}
+                    </p>
 
-                  <p>
-                    <strong>
-                      Respuesta seleccionada:
-                    </strong>{' '}
-                    {respuesta.tipoVoto}
-                  </p>
-                </div>
-              ))}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#ffffff', padding: '8px 16px', borderRadius: '999px', border: '1px solid #cbd5e1' }}>
+                      <span style={{ fontSize: '14px', color: '#475569', marginRight: '8px' }}>Su voto:</span>
+                      <strong style={{ fontSize: '16px', color: respuesta.tipoVoto === 'SI' ? '#16a34a' : respuesta.tipoVoto === 'NO' ? '#dc2626' : '#475569' }}>
+                        {respuesta.nombreCandidato ? respuesta.nombreCandidato : respuesta.tipoVoto}
+                      </strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
-            <p>
+            <p style={{ textAlign: 'center', color: '#64748b' }}>
               No se encontraron respuestas seleccionadas.
             </p>
           )}
+        </div>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: '12px',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button
+            type="button"
+            variant="action"
+            style={{ padding: '14px 28px', backgroundColor: '#f1f5f9', color: '#334155', fontWeight: 600, fontSize: '16px' }}
+            onClick={onVolverAVotacion}
+            disabled={finalizando}
           >
-            <Button
-              type="button"
-              variant="action"
-              style={{
-                textDecoration: 'none',
-                maxWidth: 280,
-              }}
-              onClick={onVolverAVotacion}
-              disabled={finalizando}
-            >
-              Volver a la votación
-            </Button>
+            Volver y corregir
+          </Button>
 
-            <Button
-              type="button"
-              variant="action"
-              style={{
-                textDecoration: 'none',
-                maxWidth: 250,
-                backgroundColor: '#b71c1c',
-              }}
-              onClick={finalizarVotacion}
-              disabled={
-                finalizando ||
-                respuestas.length === 0
-              }
-            >
-              {finalizando
-                ? 'Finalizando...'
-                : 'Finalizar votación'}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="action"
+            style={{ padding: '14px 32px', backgroundColor: '#16a34a', color: '#ffffff', fontWeight: 700, fontSize: '16px' }}
+            onClick={finalizarVotacion}
+            disabled={finalizando || respuestas.length === 0}
+          >
+            {finalizando ? 'Registrando voto...' : 'Confirmar y Enviar Voto'}
+          </Button>
         </div>
       </div>
     </VotanteLayout>

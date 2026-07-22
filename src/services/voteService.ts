@@ -4,7 +4,8 @@ export type TipoVoto =
   | "SI"
   | "NO"
   | "BLANCO"
-  | "NULO";
+  | "NULO"
+  | (string & {});
 
 export interface CreateVoteRequest {
   idReferendum: number;

@@ -6,20 +6,23 @@ import {
 
 import Sidebar from '../organisms/Sidebar';
 import Header from '../organisms/Header';
-import HelpFloatingButton from '../atoms/HelpFloatingButton';
 
 import './DashboardLayout.css';
 
 interface VotanteLayoutProps {
   children: ReactNode;
-  seccionActiva?: 'votaciones';
+  seccionActiva?: 'votaciones' | 'historial';
   onLogout?: () => void;
+  onGoToVotaciones?: () => void;
+  onGoToHistorial?: () => void;
 }
 
 export default function VotanteLayout({
   children,
   seccionActiva = 'votaciones',
   onLogout,
+  onGoToVotaciones,
+  onGoToHistorial,
 }: VotanteLayoutProps) {
   const [menuOpen, setMenuOpen] =
     useState(false);
@@ -47,6 +50,8 @@ export default function VotanteLayout({
         seccionActiva={seccionActiva}
         isOpen={menuOpen}
         onLogout={onLogout}
+        onGoToVotaciones={onGoToVotaciones}
+        onGoToHistorial={onGoToHistorial}
         onNavigate={() => setMenuOpen(false)}
       />
 
@@ -63,8 +68,6 @@ export default function VotanteLayout({
         <main className="page-content">
           {children}
         </main>
-
-        <HelpFloatingButton />
       </div>
     </>
   );

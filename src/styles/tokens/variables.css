@@ -3,16 +3,31 @@
        1. COLORES
        ========================================================================== */
     --color-primary: #254A77;          /* Azul Principal VSE */
+    --color-primary-light: #3b6ba8;    /* Azul Claro para acentos */
     --color-secondary: #ECECEC;        /* Gris Secundario VSE */
-    --color-bg-page: #D5D7DB;          /* Gris de fondo de pantallas */
-    --color-bg-light: #F4F7F8;         /* Fondo claro secundario */
-    --color-card-white: #FEFEFD;       /* Blanco de contenedores / Cards */
-    --color-dark: #000000;             /* Negro para textos principales */
-    --color-muted: #727373;            /* Gris para textos secundarios */
+    --color-bg-page: #F4F6F9;          /* Fondo moderno de pantallas */
+    --color-bg-light: #FFFFFF;         /* Fondo claro secundario */
+    --color-card-white: #FFFFFF;       /* Blanco de contenedores / Cards */
+    --color-dark: #1A202C;             /* Gris oscuro moderno para textos */
+    --color-muted: #64748B;            /* Slate para textos secundarios */
     --color-primary-dark: #1A3A5F;     /* Azul Oscuro para hover y active */
+    --color-accent: #00A86B;           /* Verde de confirmación/seguridad */
     
     --color-border-input: var(--color-primary);
     --color-spacer-visual: #E8E8E8;    /* Color gris de los bloques de espaciado */
+
+    /* Efectos y Sombras (Design System) */
+    --shadow-sm: 0 2px 8px rgba(37, 74, 119, 0.06);
+    --shadow-md: 0 8px 24px rgba(37, 74, 119, 0.08);
+    --shadow-lg: 0 16px 36px rgba(37, 74, 119, 0.12);
+    --shadow-sticky: 0 10px 30px rgba(0, 0, 0, 0.06);
+    --glass-bg: rgba(255, 255, 255, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-blur: blur(14px);
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 24px;
+    --radius-pill: 9999px;
 
     /* ==========================================================================
        2. TIPOGRAFÍA (AR One Sans para UI e Inter para guías/medidas)

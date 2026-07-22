@@ -6,7 +6,7 @@ import {
 
 import Sidebar from '../organisms/Sidebar';
 import Header from '../organisms/Header';
-import HelpFloatingButton from '../atoms/HelpFloatingButton';
+import keycloak from '../../auth/keycloak';
 
 import './DashboardLayout.css';
 
@@ -35,31 +35,32 @@ export default function AdminLayout({
   onGoToResultados,
   onLogout,
 }: AdminLayoutProps) {
-  const [menuOpen, setMenuOpen] =
-    useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflow =
-      menuOpen ? 'hidden' : '';
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
 
     return () => {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
 
+  const userName = keycloak.tokenParsed?.name || keycloak.tokenParsed?.preferred_username || welcomeName || 'Usuario';
+
   return (
     <>
       <Header
         menuOpen={menuOpen}
-        onMenuToggle={() =>
-          setMenuOpen((current) => !current)
-        }
+        onMenuToggle={() => setMenuOpen((current) => !current)}
       />
 
       <Sidebar
         mode="admin"
         seccionActiva={activeSection}
         isOpen={menuOpen}
+        isDesktopCollapsed={isDesktopCollapsed}
+        onToggleDesktopCollapse={() => setIsDesktopCollapsed(c => !c)}
         onGoToVotantes={onGoToVotantes}
         onGoToVotaciones={onGoToVotaciones}
         onGoToResultados={onGoToResultados}
@@ -76,18 +77,14 @@ export default function AdminLayout({
         />
       )}
 
-      <div className="main-layout-container">
+      <div className={`main-layout-container ${isDesktopCollapsed ? 'main-layout-container--collapsed' : ''}`}>
         <main className="page-content">
-          {welcomeName && (
-            <h1 className="page-content__welcome">
-              Bienvenido, {welcomeName}
-            </h1>
-          )}
+          <h1 className="page-content__welcome">
+            Bienvenido, {userName}
+          </h1>
 
           {children}
         </main>
-
-        <HelpFloatingButton />
       </div>
     </>
   );

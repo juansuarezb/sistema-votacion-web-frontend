@@ -3,6 +3,7 @@ import AdminLayout from '../../components/templates/AdminLayout';
 import {
   createReferendum,
   createReferendumQuestion,
+  createReferendumCandidate,
 } from '../../services/referendumService';
 import './AdminPages.css';
 
@@ -15,6 +16,16 @@ interface CreacionVotacionPageProps {
   onGoToResultados: () => void;
 }
 
+interface CandidateDraft {
+  nombre: string;
+  imagenUrl: string;
+}
+
+interface QuestionDraft {
+  texto: string;
+  candidatos: CandidateDraft[];
+}
+
 export default function CreacionVotacionPage({
   onLogout,
   onBack,
@@ -25,12 +36,51 @@ export default function CreacionVotacionPage({
 }: CreacionVotacionPageProps) {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [imagenUrl, setImagenUrl] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaCierre, setFechaCierre] = useState('');
   const [estado, setEstado] = useState('ACTIVO');
-  const [preguntasTexto, setPreguntasTexto] = useState('');
+  
+  const [preguntas, setPreguntas] = useState<QuestionDraft[]>([
+    { texto: '', candidatos: [] }
+  ]);
+  
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
+
+  const handleAddQuestion = () => {
+    setPreguntas([...preguntas, { texto: '', candidatos: [] }]);
+  };
+
+  const handleRemoveQuestion = (index: number) => {
+    const nuevas = [...preguntas];
+    nuevas.splice(index, 1);
+    setPreguntas(nuevas);
+  };
+
+  const handleQuestionTextChange = (index: number, text: string) => {
+    const nuevas = [...preguntas];
+    nuevas[index].texto = text;
+    setPreguntas(nuevas);
+  };
+
+  const handleAddCandidate = (qIndex: number) => {
+    const nuevas = [...preguntas];
+    nuevas[qIndex].candidatos.push({ nombre: '', imagenUrl: '' });
+    setPreguntas(nuevas);
+  };
+
+  const handleRemoveCandidate = (qIndex: number, cIndex: number) => {
+    const nuevas = [...preguntas];
+    nuevas[qIndex].candidatos.splice(cIndex, 1);
+    setPreguntas(nuevas);
+  };
+
+  const handleCandidateChange = (qIndex: number, cIndex: number, field: keyof CandidateDraft, value: string) => {
+    const nuevas = [...preguntas];
+    nuevas[qIndex].candidatos[cIndex][field] = value;
+    setPreguntas(nuevas);
+  };
 
   const validar = () => {
     if (!titulo.trim()) return 'El título es obligatorio.';
@@ -42,13 +92,16 @@ export default function CreacionVotacionPage({
       return 'La fecha de cierre debe ser posterior a la fecha de inicio.';
     }
 
-    const preguntas = preguntasTexto
-      .split('\n')
-      .map((pregunta) => pregunta.trim())
-      .filter(Boolean);
-
-    if (preguntas.length === 0) {
-      return 'Debe ingresar al menos una pregunta.';
+    if (preguntas.length === 0) return 'Debe ingresar al menos una pregunta.';
+    
+    for (let i = 0; i < preguntas.length; i++) {
+      if (!preguntas[i].texto.trim()) return `El texto de la pregunta ${i+1} es obligatorio.`;
+      
+      for (let j = 0; j < preguntas[i].candidatos.length; j++) {
+        if (!preguntas[i].candidatos[j].nombre.trim()) {
+          return `El nombre del candidato ${j+1} en la pregunta ${i+1} es obligatorio.`;
+        }
+      }
     }
 
     return '';
@@ -71,20 +124,23 @@ export default function CreacionVotacionPage({
       const referendum = await createReferendum({
         titulo,
         descripcion,
-        fechaInicio,
-        fechaCierre,
+        imagenUrl,
+        fechaInicio: new Date(fechaInicio).toISOString(),
+        fechaCierre: new Date(fechaCierre).toISOString(),
         estado,
       });
 
-      const preguntas = preguntasTexto
-        .split('\n')
-        .map((pregunta) => pregunta.trim())
-        .filter(Boolean);
-
-      for (const pregunta of preguntas) {
-        await createReferendumQuestion(referendum.idReferendum, {
-          texto: pregunta,
+      for (const questionDraft of preguntas) {
+        const question = await createReferendumQuestion(referendum.idReferendum, {
+          texto: questionDraft.texto.trim(),
         });
+        
+        for (const candDraft of questionDraft.candidatos) {
+          await createReferendumCandidate(referendum.idReferendum, question.idQuestion, {
+            nombre: candDraft.nombre.trim(),
+            imagenUrl: candDraft.imagenUrl.trim() || undefined
+          });
+        }
       }
 
       onCreated();
@@ -113,11 +169,9 @@ export default function CreacionVotacionPage({
       <section className="admin-page">
         <div className="admin-page__header">
           <div>
-            <h2 className="admin-page__title">Crear Votación</h2>
-
+            <h2 className="admin-page__title">Crear Elección / Votación</h2>
             <p className="admin-page__description">
-              Configure el referéndum, su periodo de vigencia y las preguntas
-              que deberán responder los votantes.
+              Configure la elección, su periodo de vigencia, las preguntas (dignidades) y sus candidatos.
             </p>
           </div>
         </div>
@@ -125,13 +179,12 @@ export default function CreacionVotacionPage({
         <form className="admin-form" onSubmit={handleSubmit}>
           <div className="admin-form__group">
             <label htmlFor="titulo">Título</label>
-
             <input
               id="titulo"
               type="text"
               value={titulo}
               onChange={(event) => setTitulo(event.target.value)}
-              placeholder="Ej. Consulta de presupuesto estudiantil"
+              placeholder="Ej. Elecciones Generales 2026"
               maxLength={200}
               required
             />
@@ -139,22 +192,32 @@ export default function CreacionVotacionPage({
 
           <div className="admin-form__group">
             <label htmlFor="descripcion">Descripción</label>
-
             <textarea
               id="descripcion"
               value={descripcion}
               onChange={(event) => setDescripcion(event.target.value)}
-              placeholder="Describa brevemente el objetivo de la votación."
+              placeholder="Describa brevemente el objetivo de la elección."
               maxLength={1000}
-              rows={4}
+              rows={3}
               required
+            />
+          </div>
+
+          <div className="admin-form__group">
+            <label htmlFor="imagenUrl">URL de Imagen Principal (Opcional)</label>
+            <input
+              id="imagenUrl"
+              type="url"
+              value={imagenUrl}
+              onChange={(event) => setImagenUrl(event.target.value)}
+              placeholder="Ej. https://ejemplo.com/imagen.jpg"
+              maxLength={1000}
             />
           </div>
 
           <div className="admin-form__row">
             <div className="admin-form__group">
               <label htmlFor="fechaInicio">Fecha de inicio</label>
-
               <input
                 id="fechaInicio"
                 type="datetime-local"
@@ -163,10 +226,8 @@ export default function CreacionVotacionPage({
                 required
               />
             </div>
-
             <div className="admin-form__group">
               <label htmlFor="fechaCierre">Fecha de cierre</label>
-
               <input
                 id="fechaCierre"
                 type="datetime-local"
@@ -179,7 +240,6 @@ export default function CreacionVotacionPage({
 
           <div className="admin-form__group">
             <label htmlFor="estado">Estado inicial</label>
-
             <select
               id="estado"
               value={estado}
@@ -192,25 +252,72 @@ export default function CreacionVotacionPage({
             </select>
           </div>
 
-          <div className="admin-form__group">
-            <label htmlFor="preguntas">
-              Preguntas del referéndum
-            </label>
+          <hr style={{ margin: '30px 0', borderColor: 'var(--border-color)' }} />
 
-            <textarea
-              id="preguntas"
-              value={preguntasTexto}
-              onChange={(event) => setPreguntasTexto(event.target.value)}
-              placeholder={
-                'Escriba una pregunta por línea.\nEjemplo:\n¿Aprueba la propuesta presentada?\n¿Está de acuerdo con el presupuesto?'
-              }
-              rows={7}
-              required
-            />
+          <h3 className="admin-questions__title" style={{ marginBottom: '15px' }}>Preguntas y Candidatos</h3>
+          
+          {preguntas.map((q, qIndex) => (
+            <div key={qIndex} style={{ background: 'var(--surface-color)', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h4 style={{ margin: 0 }}>Pregunta {qIndex + 1}</h4>
+                {preguntas.length > 1 && (
+                  <button type="button" className="admin-button admin-button--secondary" onClick={() => handleRemoveQuestion(qIndex)} style={{ padding: '6px 12px', fontSize: '14px' }}>
+                    Eliminar Pregunta
+                  </button>
+                )}
+              </div>
+              
+              <div className="admin-form__group">
+                <input
+                  type="text"
+                  value={q.texto}
+                  onChange={(e) => handleQuestionTextChange(qIndex, e.target.value)}
+                  placeholder="Ej. ¿A quién elige para Presidente?"
+                  required
+                />
+              </div>
 
-            <small className="admin-form__help">
-              Cada línea será registrada como una pregunta independiente.
-            </small>
+              <div style={{ paddingLeft: '20px', borderLeft: '3px solid var(--primary-color)', marginTop: '20px' }}>
+                <h5 style={{ margin: '0 0 15px 0' }}>Candidatos registrados</h5>
+                
+                {q.candidatos.length === 0 ? (
+                  <p className="admin-message admin-message--empty" style={{ margin: '0 0 15px 0', fontSize: '14px' }}>No hay candidatos. Se usarán las opciones por defecto (Sí/No).</p>
+                ) : (
+                  q.candidatos.map((c, cIndex) => (
+                    <div key={cIndex} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        style={{ flex: 1 }}
+                        placeholder="Nombre del candidato"
+                        value={c.nombre}
+                        onChange={(e) => handleCandidateChange(qIndex, cIndex, 'nombre', e.target.value)}
+                        required
+                      />
+                      <input
+                        type="url"
+                        style={{ flex: 1 }}
+                        placeholder="URL de foto (opcional)"
+                        value={c.imagenUrl}
+                        onChange={(e) => handleCandidateChange(qIndex, cIndex, 'imagenUrl', e.target.value)}
+                      />
+                      <button type="button" className="admin-action-btn admin-action-btn--delete" onClick={() => handleRemoveCandidate(qIndex, cIndex)}>
+                        X
+                      </button>
+                    </div>
+                  ))
+                )}
+                
+                <button type="button" className="admin-button admin-button--info" onClick={() => handleAddCandidate(qIndex)} style={{ padding: '6px 12px', fontSize: '14px' }}>
+                  + Añadir Candidato
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div style={{ marginBottom: '30px' }}>
+            <button type="button" className="admin-button admin-button--secondary" onClick={handleAddQuestion}>
+              + Añadir Otra Pregunta
+            </button>
           </div>
 
           {error && (
@@ -225,7 +332,7 @@ export default function CreacionVotacionPage({
               className="admin-button admin-button--primary"
               disabled={guardando}
             >
-              {guardando ? 'Guardando...' : 'Guardar votación'}
+              {guardando ? 'Guardando...' : 'Guardar Elección'}
             </button>
 
             <button

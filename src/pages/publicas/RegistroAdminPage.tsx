@@ -24,43 +24,52 @@ export default function RegistroAdminPage({
   const [confirmarPassword, setConfirmarPassword] = useState('');
 
   const [guardando, setGuardando] = useState(false);
-  const [error, setError] = useState('');
+  
+  // Refactor error state to support per-field errors
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [globalError, setGlobalError] = useState('');
   const [mensaje, setMensaje] = useState('');
 
-  const validar = (): string => {
-    if (!username.trim()) {
-      return 'El nombre de usuario es obligatorio.';
-    }
+  const validar = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+    let isValid = true;
 
-    if (username.trim().length < 4) {
-      return 'El nombre de usuario debe tener al menos 4 caracteres.';
+    if (!username.trim()) {
+      newErrors.username = 'El nombre de usuario es obligatorio.';
+      isValid = false;
+    } else if (username.trim().length < 4) {
+      newErrors.username = 'El nombre de usuario debe tener al menos 4 caracteres.';
+      isValid = false;
     }
 
     if (!nombre.trim()) {
-      return 'El nombre completo es obligatorio.';
+      newErrors.nombre = 'El nombre completo es obligatorio.';
+      isValid = false;
     }
 
     if (!correoElectronico.trim()) {
-      return 'El correo electrónico es obligatorio.';
-    }
-
-    if (!correoElectronico.includes('@')) {
-      return 'El correo electrónico no es válido.';
+      newErrors.correoElectronico = 'El correo electrónico es obligatorio.';
+      isValid = false;
+    } else if (!correoElectronico.includes('@')) {
+      newErrors.correoElectronico = 'El correo electrónico no es válido.';
+      isValid = false;
     }
 
     if (!password) {
-      return 'La contraseña es obligatoria.';
-    }
-
-    if (password.length < 8) {
-      return 'La contraseña debe tener al menos 8 caracteres.';
+      newErrors.password = 'La contraseña es obligatoria.';
+      isValid = false;
+    } else if (password.length < 8) {
+      newErrors.password = 'La contraseña debe tener al menos 8 caracteres.';
+      isValid = false;
     }
 
     if (password !== confirmarPassword) {
-      return 'Las contraseñas no coinciden.';
+      newErrors.confirmarPassword = 'Las contraseñas no coinciden.';
+      isValid = false;
     }
 
-    return '';
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = async (
@@ -68,17 +77,16 @@ export default function RegistroAdminPage({
   ) => {
     event.preventDefault();
 
-    const validationError = validar();
-
-    if (validationError) {
-      setError(validationError);
+    if (!validar()) {
       setMensaje('');
+      setGlobalError('');
       return;
     }
 
     try {
       setGuardando(true);
-      setError('');
+      setErrors({});
+      setGlobalError('');
       setMensaje('');
 
       const response = await registerAdmin({
@@ -99,9 +107,9 @@ export default function RegistroAdminPage({
       console.error('Error al registrar administrador:', err);
 
       if (err instanceof Error) {
-        setError(err.message);
+        setGlobalError(err.message);
       } else {
-        setError('No se pudo registrar el administrador.');
+        setGlobalError('No se pudo registrar el administrador.');
       }
     } finally {
       setGuardando(false);
@@ -110,56 +118,71 @@ export default function RegistroAdminPage({
 
   return (
     <AuthLayout showHeader>
-      <AuthCard errorMessage={error}>
+      <AuthCard 
+        errorMessage={globalError}
+        title="Registro de Administrador"
+        description="Crea tu cuenta para configurar el sistema, gestionar los procesos electorales y crear las votaciones de forma segura."
+      >
         <form className="login-form" onSubmit={handleSubmit}>
           <TextField
             name="username"
-            placeholder="Nombre de usuario"
+            label="Nombre de usuario"
+            placeholder="Ej: admin_votos"
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             disabled={guardando}
+            error={errors.username}
           />
 
           <TextField
             name="nombre"
-            placeholder="Nombre completo"
+            label="Nombre completo"
+            placeholder="Ej: Juan Pérez"
             autoComplete="name"
             value={nombre}
             onChange={(event) => setNombre(event.target.value)}
             disabled={guardando}
+            error={errors.nombre}
           />
 
           <TextField
             name="correoElectronico"
             type="email"
-            placeholder="Correo electrónico"
+            label="Correo electrónico"
+            placeholder="Ej: juan.perez@votos.com"
             autoComplete="email"
             value={correoElectronico}
             onChange={(event) =>
               setCorreoElectronico(event.target.value)
             }
             disabled={guardando}
+            error={errors.correoElectronico}
           />
 
           <PasswordField
             name="password"
-            placeholder="Contraseña"
+            label="Contraseña"
+            placeholder="Mínimo 8 caracteres"
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={guardando}
+            error={errors.password}
+            showStrengthBar
           />
 
           <PasswordField
             name="confirmarPassword"
-            placeholder="Confirmar contraseña"
+            label="Confirmar contraseña"
+            placeholder="Repite la contraseña"
             autoComplete="new-password"
             value={confirmarPassword}
             onChange={(event) =>
               setConfirmarPassword(event.target.value)
             }
             disabled={guardando}
+            error={errors.confirmarPassword}
           />
 
           {mensaje && (
@@ -177,23 +200,31 @@ export default function RegistroAdminPage({
           )}
 
           {!mensaje && (
-            <Button
-              type="submit"
-              variant="auth"
-              disabled={guardando}
-            >
-              {guardando ? 'Registrando...' : 'Registrarse'}
-            </Button>
-          )}
+            <>
+              <Button
+                type="submit"
+                variant="auth"
+                disabled={guardando}
+              >
+                {guardando ? 'Registrando...' : 'Registrarse'}
+              </Button>
 
-          <Button
-            type="button"
-            variant="auth"
-            onClick={onBack}
-            disabled={guardando}
-          >
-            Volver
-          </Button>
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-primary)', fontSize: '14px', color: '#4b5563' }}>
+                  ¿Ya tienes una cuenta?{' '}
+                </span>
+                <button 
+                  type="button" 
+                  onClick={onBack}
+                  className="register-link" 
+                  style={{ background: 'none', border: 'none', padding: 0, display: 'inline', cursor: 'pointer', fontSize: '14px' }}
+                  disabled={guardando}
+                >
+                  Inicia sesión
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </AuthCard>
     </AuthLayout>

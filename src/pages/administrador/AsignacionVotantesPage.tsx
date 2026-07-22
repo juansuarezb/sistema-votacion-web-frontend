@@ -273,168 +273,130 @@ export default function AsignacionVotantesPage({
 
         {!cargando && (
           <>
-            <p>
-              <strong>Referéndum:</strong>{' '}
-              {tituloReferendum}
-            </p>
+            <div className="admin-card">
+              <h3 className="admin-card__title">Asignar Nuevo Votante</h3>
+              <p style={{ margin: '0 0 20px', color: '#4b5563' }}>
+                <strong>Referéndum:</strong> {tituloReferendum}
+              </p>
 
-            <div className="admin-form">
-              <div className="admin-form__group">
-                <label htmlFor="votante">
-                  Votante
-                </label>
+              <div className="admin-form">
+                <div className="admin-form__group">
+                  <label htmlFor="votante">Seleccione un votante disponible</label>
+                  <select
+                    id="votante"
+                    className="admin-select"
+                    value={idVotante}
+                    onChange={(event) => handleCambioVotante(event.target.value)}
+                    disabled={asignando || votantesDisponibles.length === 0}
+                  >
+                    {votantesDisponibles.length === 0 && (
+                      <option value="">No existen votantes disponibles</option>
+                    )}
+                    {votantes.map((votante) => {
+                      const estado = obtenerEstadoVotante(votante.idVotante);
+                      const bloqueado = estado !== 'DISPONIBLE';
 
-                <select
-                  id="votante"
-                  value={idVotante}
-                  onChange={(event) =>
-                    handleCambioVotante(
-                      event.target.value
-                    )
-                  }
-                  disabled={
-                    asignando ||
-                    votantesDisponibles.length === 0
-                  }
+                      return (
+                        <option
+                          key={votante.idVotante}
+                          value={votante.idVotante}
+                          disabled={bloqueado}
+                          style={{
+                            color:
+                              estado === 'COMPLETADO'
+                                ? '#94a3b8'
+                                : estado === 'ASIGNADO'
+                                  ? '#b45309'
+                                  : '#16a34a',
+                          }}
+                        >
+                          {votante.nombre} - {votante.cedula} {' — '} {obtenerTextoEstado(votante.idVotante)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              <div className="admin-actions" style={{ marginTop: '24px' }}>
+                <button
+                  type="button"
+                  className="admin-button admin-button--primary"
+                  onClick={handleAsignar}
+                  disabled={asignando || !idVotante || preguntas.length === 0}
                 >
-                  {votantesDisponibles.length === 0 && (
-                    <option value="">
-                      No existen votantes disponibles
-                    </option>
-                  )}
+                  {asignando ? 'Asignando...' : 'Asignar votante al referéndum'}
+                </button>
+                <button
+                  type="button"
+                  className="admin-button admin-button--secondary"
+                  onClick={onBack}
+                  disabled={asignando}
+                >
+                  Volver
+                </button>
+              </div>
+              
+              {mensaje && <p className="admin-success">{mensaje}</p>}
+            </div>
 
+            <div className="admin-grid-2">
+              <div className="admin-card" style={{ marginBottom: 0 }}>
+                <h3 className="admin-card__title">Estado de los Votantes</h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {votantes.map((votante) => {
-                    const estado = obtenerEstadoVotante(
-                      votante.idVotante
-                    );
-
-                    const bloqueado =
-                      estado !== 'DISPONIBLE';
-
+                    const estado = obtenerEstadoVotante(votante.idVotante);
                     return (
-                      <option
+                      <li
                         key={votante.idVotante}
-                        value={votante.idVotante}
-                        disabled={bloqueado}
                         style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          backgroundColor:
+                            estado === 'COMPLETADO'
+                              ? '#f1f5f9'
+                              : estado === 'ASIGNADO'
+                                ? '#fef3c7'
+                                : '#f0fdf4',
                           color:
                             estado === 'COMPLETADO'
-                              ? '#777'
+                              ? '#475569'
                               : estado === 'ASIGNADO'
-                                ? '#b26a00'
-                                : '#1b5e20',
+                                ? '#92400e'
+                                : '#166534',
+                          border: '1px solid',
+                          borderColor:
+                            estado === 'COMPLETADO'
+                              ? '#e2e8f0'
+                              : estado === 'ASIGNADO'
+                                ? '#fde68a'
+                                : '#bbf7d0',
                         }}
                       >
-                        {votante.nombre} - {votante.cedula}
+                        <strong>{votante.nombre}</strong>
                         {' — '}
-                        {obtenerTextoEstado(
-                          votante.idVotante
-                        )}
-                      </option>
+                        {obtenerTextoEstado(votante.idVotante)}
+                      </li>
                     );
                   })}
-                </select>
+                </ul>
+              </div>
+
+              <div className="admin-card" style={{ marginBottom: 0 }}>
+                <h3 className="admin-card__title">Preguntas del Referéndum</h3>
+                {preguntas.length === 0 ? (
+                  <p className="admin-message admin-message--empty">No hay preguntas registradas.</p>
+                ) : (
+                  <ol className="admin-questions__list" style={{ margin: 0 }}>
+                    {preguntas.map((pregunta) => (
+                      <li key={pregunta.idQuestion} className="admin-questions__item">
+                        {pregunta.texto}
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </div>
             </div>
-
-            <div
-              style={{
-                marginTop: '20px',
-                marginBottom: '24px',
-              }}
-            >
-              <h3>Estado de los votantes</h3>
-
-              <ul
-                style={{
-                  listStyle: 'none',
-                  padding: 0,
-                }}
-              >
-                {votantes.map((votante) => {
-                  const estado = obtenerEstadoVotante(
-                    votante.idVotante
-                  );
-
-                  return (
-                    <li
-                      key={votante.idVotante}
-                      style={{
-                        padding: '10px 12px',
-                        marginBottom: '8px',
-                        borderRadius: '6px',
-                        backgroundColor:
-                          estado === 'COMPLETADO'
-                            ? '#eeeeee'
-                            : estado === 'ASIGNADO'
-                              ? '#fff3e0'
-                              : '#e8f5e9',
-                        color:
-                          estado === 'COMPLETADO'
-                            ? '#666'
-                            : estado === 'ASIGNADO'
-                              ? '#8a4b00'
-                              : '#1b5e20',
-                      }}
-                    >
-                      <strong>
-                        {votante.nombre}
-                      </strong>
-                      {' — '}
-                      {obtenerTextoEstado(
-                        votante.idVotante
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            <h3>Preguntas del referéndum</h3>
-
-            {preguntas.length === 0 && (
-              <p>No hay preguntas registradas.</p>
-            )}
-
-            <ul>
-              {preguntas.map((pregunta) => (
-                <li key={pregunta.idQuestion}>
-                  {pregunta.texto}
-                </li>
-              ))}
-            </ul>
-
-            <div className="admin-actions">
-              <button
-                type="button"
-                className="admin-button admin-button--primary"
-                onClick={handleAsignar}
-                disabled={
-                  asignando ||
-                  !idVotante ||
-                  preguntas.length === 0
-                }
-              >
-                {asignando
-                  ? 'Asignando...'
-                  : 'Asignar votante al referéndum'}
-              </button>
-
-              <button
-                type="button"
-                className="admin-button admin-button--secondary"
-                onClick={onBack}
-                disabled={asignando}
-              >
-                Volver
-              </button>
-            </div>
-
-            {mensaje && (
-              <p className="admin-success">
-                {mensaje}
-              </p>
-            )}
           </>
         )}
       </section>

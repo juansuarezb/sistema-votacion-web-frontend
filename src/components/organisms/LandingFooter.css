@@ -1,29 +1,40 @@
 .landing-footer {
-    background-color: var(--color-card-white);
-    border-top: 1px solid var(--color-secondary);
-    padding: 40px 60px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 40px;
+    background-color: var(--color-dark);
+    color: #ffffff;
+    padding: 60px 40px 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .landing-footer__brand {
-    flex: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.landing-footer__brand-info {
+    max-width: 380px;
 }
 
 .landing-footer__brand-title {
     font-family: var(--font-primary);
-    font-size: var(--size-title-3);
-    font-weight: var(--weight-bold);
-    color: var(--color-primary);
-    margin-bottom: 15px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
+    margin-bottom: 12px;
 }
 
 .landing-footer__brand-description {
     font-family: var(--font-primary);
-    font-size: var(--size-body-3);
-    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    color: #94A3B8;
 }
 
 .landing-footer__links {
@@ -31,27 +42,44 @@
     gap: 60px;
 }
 
+.landing-footer__links a {
+    color: #CBD5E1;
+    transition: color 0.2s ease;
+}
+
+.landing-footer__links a:hover {
+    color: #ffffff;
+}
+
 .landing-footer__legal {
-    text-align: right;
+    max-width: 1280px;
+    margin: 24px auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #64748B;
 }
 
 .landing-footer__legal p {
-    font-family: var(--font-primary);
-    font-size: var(--size-body-3);
-    color: var(--color-muted);
-    margin-bottom: 5px;
+    margin: 0;
 }
 
 @media (max-width: 768px) {
     .landing-footer {
-        padding: 30px;
+        padding: 40px 24px 30px;
+    }
+    .landing-footer__brand {
         flex-direction: column;
+        gap: 30px;
     }
     .landing-footer__links {
-        flex-direction: column;
-        gap: 20px;
+        gap: 30px;
     }
     .landing-footer__legal {
-        text-align: left;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }
+

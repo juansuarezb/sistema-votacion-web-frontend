@@ -1,34 +1,42 @@
 .landing-services {
-    scroll-margin-top: 90px;
-    padding: 80px 20px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    scroll-margin-top: 100px;
+    padding: 80px 40px;
     text-align: center;
 }
 
 .landing-services__title {
     font-family: var(--font-primary);
-    font-size: 36px;
-    font-weight: bold;
-    margin-bottom: 15px;
+    font-size: 38px;
+    font-weight: 800;
+    margin-bottom: 12px;
     color: var(--color-dark);
+    letter-spacing: -0.5px;
 }
 
 .landing-services__description {
     font-family: var(--font-primary);
-    font-size: 20px;
+    font-size: 18px;
+    line-height: 1.6;
     color: var(--color-muted);
-    max-width: 700px;
-    margin: 0 auto 40px;
+    max-width: 680px;
+    margin: 0 auto 50px;
 }
 
 .landing-features {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
     justify-content: center;
 }
 
 @media (max-width: 768px) {
     .landing-services {
-        padding: 50px 20px;
+        padding: 50px 24px;
+    }
+    .landing-services__title {
+        font-size: 30px;
     }
 }
+

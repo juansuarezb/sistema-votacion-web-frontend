@@ -25,6 +25,26 @@ interface VerResultadosPageProps {
   onGoToResultados: () => void;
 }
 
+const renderResultCell = (votos: number, porcentaje: number, color: string) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '90px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <span style={{ fontWeight: 600, fontSize: '16px', color: '#111827' }}>{votos}</span>
+      <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600 }}>{porcentaje}%</span>
+    </div>
+    <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+      <div 
+        style={{ 
+          width: `${porcentaje}%`, 
+          height: '100%', 
+          backgroundColor: color, 
+          borderRadius: '999px', 
+          transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' 
+        }} 
+      />
+    </div>
+  </div>
+);
+
 export default function VerResultadosPage({
   idReferendumInicial,
   onLogout,
@@ -205,16 +225,24 @@ export default function VerResultadosPage({
 
             {!consultando && resultado && (
               <div className="admin-results-summary">
-                {referendumSeleccionado && (
-                  <p className="admin-page__description">
-                    Resultados de:{' '}
-                    <strong>{referendumSeleccionado.titulo}</strong>
-                  </p>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '20px' }}>
+                  {referendumSeleccionado && (
+                    <div style={{ flex: '1 1 min-content' }}>
+                      <h3 style={{ margin: '0 0 8px', fontSize: '24px', fontWeight: 800, color: '#111827', lineHeight: 1.2 }}>
+                        {referendumSeleccionado.titulo}
+                      </h3>
+                      <p style={{ margin: 0, color: '#475569', fontSize: '16px' }}>
+                        Desglose de participación y respuestas por pregunta.
+                      </p>
+                    </div>
+                  )}
 
-                <p className="admin-result-total">
-                  Total de respuestas registradas: {resultado.totalVotes}
-                </p>
+                  <div style={{ padding: '16px 24px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', textAlign: 'center', minWidth: '160px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participación</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 900, color: '#0d47a1', lineHeight: 1 }}>{resultado.totalVotes}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Votos Registrados</p>
+                  </div>
+                </div>
 
                 {resultado.questions.length === 0 ? (
                   <p className="admin-message admin-message--empty">
@@ -222,51 +250,43 @@ export default function VerResultadosPage({
                     referéndum.
                   </p>
                 ) : (
-                  <div className="admin-table-container">
-                    <table className="admin-table">
+                  <div className="admin-table-container" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                    <table className="admin-table" style={{ margin: 0 }}>
                       <thead>
                         <tr>
-                          <th>Pregunta</th>
-                          <th>SÍ</th>
-                          <th>NO</th>
-                          <th>BLANCO</th>
-                          <th>NULO</th>
-                          <th>Total</th>
+                          <th style={{ backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, borderBottom: '2px solid #e2e8f0' }}>Pregunta</th>
+                          <th style={{ backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, borderBottom: '2px solid #e2e8f0' }}>SÍ</th>
+                          <th style={{ backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, borderBottom: '2px solid #e2e8f0' }}>NO</th>
+                          <th style={{ backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, borderBottom: '2px solid #e2e8f0' }}>BLANCO</th>
+                          <th style={{ backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, borderBottom: '2px solid #e2e8f0' }}>NULO</th>
+                          <th style={{ backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, borderBottom: '2px solid #e2e8f0' }}>Total</th>
                         </tr>
                       </thead>
 
                       <tbody>
                         {resultado.questions.map((question) => (
                           <tr key={question.idQuestion}>
-                            <td className="admin-table__description">
+                            <td className="admin-table__description" style={{ fontWeight: 500, color: '#1f2937' }}>
                               {obtenerTextoPregunta(question.idQuestion)}
                             </td>
 
                             <td className="admin-result-number">
-                              {question.si}
-                              <br />
-                              <small>{question.porcentajeSi}%</small>
+                              {renderResultCell(question.si, question.porcentajeSi, '#16a34a')}
                             </td>
 
                             <td className="admin-result-number">
-                              {question.no}
-                              <br />
-                              <small>{question.porcentajeNo}%</small>
+                              {renderResultCell(question.no, question.porcentajeNo, '#dc2626')}
                             </td>
 
                             <td className="admin-result-number">
-                              {question.blanco}
-                              <br />
-                              <small>{question.porcentajeBlanco}%</small>
+                              {renderResultCell(question.blanco, question.porcentajeBlanco, '#94a3b8')}
                             </td>
 
                             <td className="admin-result-number">
-                              {question.nulo}
-                              <br />
-                              <small>{question.porcentajeNulo}%</small>
+                              {renderResultCell(question.nulo, question.porcentajeNulo, '#64748b')}
                             </td>
 
-                            <td className="admin-result-number admin-result-total">
+                            <td className="admin-result-number admin-result-total" style={{ fontSize: '20px' }}>
                               {question.total}
                             </td>
                           </tr>

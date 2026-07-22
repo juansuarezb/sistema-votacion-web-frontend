@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../../components/templates/AdminLayout';
+import Icon from '../../components/atoms/Icon';
+import ConfirmModal from '../../components/molecules/ConfirmModal';
 import './AdminPages.css';
 import {
   deleteVotante,
@@ -27,6 +29,9 @@ export default function ListaVotantesPage({
   const [votantes, setVotantes] = useState<Votante[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [votanteToDelete, setVotanteToDelete] = useState<number | null>(null);
 
   const cargarVotantes = async () => {
     try {
@@ -52,15 +57,17 @@ export default function ListaVotantesPage({
     cargarVotantes();
   }, []);
 
-  const handleEliminar = async (idVotante: number) => {
-    const confirmar = window.confirm(
-      '¿Seguro que deseas eliminar este votante?'
-    );
+  const confirmEliminar = (idVotante: number) => {
+    setVotanteToDelete(idVotante);
+    setIsConfirmOpen(true);
+  };
 
-    if (!confirmar) return;
-
+  const handleEliminar = async () => {
+    if (votanteToDelete === null) return;
+    
+    setIsConfirmOpen(false);
     try {
-      await deleteVotante(idVotante);
+      await deleteVotante(votanteToDelete);
       await cargarVotantes();
     } catch (err) {
       console.error('Error al eliminar votante:', err);
@@ -70,87 +77,107 @@ export default function ListaVotantesPage({
       } else {
         alert('No se pudo eliminar el votante.');
       }
+    } finally {
+      setVotanteToDelete(null);
     }
   };
 
-return (
-  <AdminLayout
-    welcomeName="Admin"
-    activeSection="votantes"
-    onLogout={onLogout}
-    onGoToVotantes={onGoToVotantes}
-    onGoToVotaciones={onGoToVotaciones}
-    onGoToResultados={onGoToResultados}
-  >
-    <section className="admin-page">
-      <div className="admin-page__header">
-        <h2 className="admin-page__title">Gestión de Votantes</h2>
+  return (
+    <AdminLayout
+      welcomeName="Admin"
+      activeSection="votantes"
+      onLogout={onLogout}
+      onGoToVotantes={onGoToVotantes}
+      onGoToVotaciones={onGoToVotaciones}
+      onGoToResultados={onGoToResultados}
+    >
+      <section className="admin-page">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-page__title">Gestión de Votantes</h2>
+            <p className="admin-page__description">
+              Administra el padrón electoral de tu jurisdicción.
+            </p>
+          </div>
 
-        <button
-          type="button"
-          className="admin-button admin-button--primary"
-          onClick={onGoToCreate}
-        >
-          Nuevo Votante
-        </button>
-      </div>
+          <button
+            type="button"
+            className="admin-button admin-button--primary"
+            onClick={onGoToCreate}
+          >
+            <Icon name="person" alt="" size={20} />
+            <span style={{ marginLeft: '8px' }}>Nuevo Votante</span>
+          </button>
+        </div>
 
-      {cargando && <p>Cargando votantes...</p>}
+        {cargando && <div className="admin-message admin-message--loading">Cargando votantes...</div>}
 
-      {error && <p className="admin-error">{error}</p>}
+        {error && <div className="admin-error">{error}</div>}
 
-      {!cargando && !error && votantes.length === 0 && (
-        <p>No existen votantes registrados.</p>
-      )}
+        {!cargando && !error && votantes.length === 0 && (
+          <div className="admin-message admin-message--empty">No existen votantes registrados.</div>
+        )}
 
-      {!cargando && !error && votantes.length > 0 && (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Keycloak ID</th>
-              <th>Nombre</th>
-              <th>Cédula</th>
-              <th>Correo</th>
-              <th>Fecha registro</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+        {!cargando && !error && votantes.length > 0 && (
+          <div className="admin-table-container">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Cédula</th>
+                  <th>Nombre Completo</th>
+                  <th>Correo Electrónico</th>
+                  <th>Fecha de Registro</th>
+                  <th style={{ textAlign: 'center' }}>Acciones</th>
+                </tr>
+              </thead>
 
-          <tbody>
-            {votantes.map((votante) => (
-              <tr key={votante.idVotante}>
-                <td>{votante.idVotante}</td>
-                <td>{votante.keycloakId}</td>
-                <td>{votante.nombre}</td>
-                <td>{votante.cedula}</td>
-                <td>{votante.correoElectronico}</td>
-                <td>{new Date(votante.fechaRegistro).toLocaleString()}</td>
-                <td>
-                  <div className="admin-actions">
-                    <button
-                      type="button"
-                      className="admin-button admin-button--secondary"
-                      onClick={() => onGoToEdit(votante.idVotante)}
-                    >
-                      Editar
-                    </button>
+              <tbody>
+                {votantes.map((votante) => (
+                  <tr key={votante.idVotante}>
+                    <td style={{ fontWeight: '600' }}>{votante.cedula}</td>
+                    <td>{votante.nombre}</td>
+                    <td>{votante.correoElectronico}</td>
+                    <td className="admin-table__date">
+                      {new Date(votante.fechaRegistro).toLocaleDateString()}
+                    </td>
+                    <td>
+                      <div className="admin-actions admin-actions--center">
+                        <button
+                          type="button"
+                          className="admin-action-btn admin-action-btn--edit"
+                          onClick={() => onGoToEdit(votante.idVotante)}
+                          title="Editar votante"
+                        >
+                          <Icon name="person" alt="Editar" size={24} />
+                        </button>
 
-                    <button
-                      type="button"
-                      className="admin-button admin-button--danger"
-                      onClick={() => handleEliminar(votante.idVotante)}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
-  </AdminLayout>
-);
+                        <button
+                          type="button"
+                          className="admin-action-btn admin-action-btn--delete"
+                          onClick={() => confirmEliminar(votante.idVotante)}
+                          title="Eliminar votante"
+                        >
+                          <Icon name="exit" alt="Eliminar" size={24} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Eliminar Votante"
+        message="¿Estás seguro de que deseas eliminar este votante? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        onConfirm={handleEliminar}
+        onCancel={() => setIsConfirmOpen(false)}
+        isDestructive={true}
+      />
+    </AdminLayout>
+  );
 }

@@ -33,7 +33,8 @@ type Page =
   | 'admin-crear-votacion'
   | 'admin-editar-votacion'
   | 'admin-asignacion'
-  | 'admin-resultados';
+  | 'admin-resultados'
+  | 'historial';
 
 function App() {
   const [keycloakReady, setKeycloakReady] = useState(false);
@@ -285,7 +286,6 @@ function App() {
           idReferendum={selectedReferendumId}
           onLogout={finalizarSesion}
           onBack={goToAdminVotaciones}
-          onUpdated={goToAdminVotaciones}
           onGoToVotantes={goToAdminVotantes}
           onGoToVotaciones={goToAdminVotaciones}
           onGoToResultados={goToAdminResultados}
@@ -360,20 +360,27 @@ function App() {
           onVolverAVotacion={() =>
             setPage('voto')
           }
-          onFinalizarSesion={finalizarSesion}
+          onVotacionCompletada={() => {
+            setPage('votaciones');
+          }}
           onLogout={finalizarSesion}
         />
       );
     }
 
-    return (
-      <ListaVotacionesActivasPage
-        onGoToVote={() =>
-          setPage('voto')
-        }
-        onLogout={finalizarSesion}
-      />
-    );
+    if (page === 'votaciones' || page === 'historial') {
+      return (
+        <ListaVotacionesActivasPage
+          modo={page === 'historial' ? 'historial' : 'activas'}
+          onGoToVote={() =>
+            setPage('voto')
+          }
+          onLogout={finalizarSesion}
+          onGoToVotaciones={() => setPage('votaciones')}
+          onGoToHistorial={() => setPage('historial')}
+        />
+      );
+    }
   }
 
   return (

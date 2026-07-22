@@ -4,18 +4,18 @@
 
 .main-layout-container {
     min-height: calc(100vh - 90px);
-
     margin-top: 90px;
     margin-left: 379px;
-
     position: relative;
-
     display: flex;
     flex-direction: column;
-
     background-color: #ffffff;
-
     box-sizing: border-box;
+    transition: margin-left 0.3s ease;
+}
+
+.main-layout-container--collapsed {
+    margin-left: 90px;
 }
 
 .page-content {

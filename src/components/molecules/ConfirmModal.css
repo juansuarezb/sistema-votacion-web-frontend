@@ -1,0 +1,94 @@
+.c-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.c-modal {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.c-modal__title {
+    margin: 0 0 16px;
+    font-family: var(--font-primary);
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.c-modal__message {
+    margin: 0 0 32px;
+    font-family: var(--font-primary);
+    font-size: 16px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.c-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.c-modal__btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: var(--font-primary);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+.c-modal__btn--cancel {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.c-modal__btn--cancel:hover {
+    background-color: #e2e8f0;
+}
+
+.c-modal__btn--primary {
+    background-color: #0d47a1;
+    color: #ffffff;
+}
+
+.c-modal__btn--primary:hover {
+    background-color: #083577;
+}
+
+.c-modal__btn--danger {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.c-modal__btn--danger:hover {
+    background-color: #b91c1c;
+}

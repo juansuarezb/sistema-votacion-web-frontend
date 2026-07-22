@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/templates/AdminLayout';
+import Icon from '../../components/atoms/Icon';
+import ConfirmModal from '../../components/molecules/ConfirmModal';
 
 import {
   deleteReferendum,
@@ -34,6 +36,9 @@ export default function ListaVotacionesPage({
   const [referendums, setReferendums] = useState<Referendum[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [referendumToDelete, setReferendumToDelete] = useState<number | null>(null);
 
   const cargarReferendums = async () => {
     try {
@@ -61,19 +66,17 @@ export default function ListaVotacionesPage({
     cargarReferendums();
   }, []);
 
-  const handleEliminar = async (
-    idReferendum: number
-  ) => {
-    const confirmar = window.confirm(
-      '¿Seguro que deseas eliminar esta votación?'
-    );
+  const confirmEliminar = (idReferendum: number) => {
+    setReferendumToDelete(idReferendum);
+    setIsConfirmOpen(true);
+  };
 
-    if (!confirmar) {
-      return;
-    }
-
+  const handleEliminar = async () => {
+    if (referendumToDelete === null) return;
+    
+    setIsConfirmOpen(false);
     try {
-      await deleteReferendum(idReferendum);
+      await deleteReferendum(referendumToDelete);
       await cargarReferendums();
     } catch (err) {
       console.error(
@@ -88,6 +91,8 @@ export default function ListaVotacionesPage({
       } else {
         alert('No se pudo eliminar la votación.');
       }
+    } finally {
+      setReferendumToDelete(null);
     }
   };
 
@@ -142,7 +147,8 @@ export default function ListaVotacionesPage({
             className="admin-button admin-button--primary"
             onClick={onGoToCreate}
           >
-            Nueva Votación
+            <Icon name="registro" alt="" size={20} />
+            <span style={{ marginLeft: '8px' }}>Nueva Votación</span>
           </button>
         </div>
 
@@ -179,7 +185,7 @@ export default function ListaVotacionesPage({
                     <th>Inicio</th>
                     <th>Cierre</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th style={{ textAlign: 'center' }}>Acciones</th>
                   </tr>
                 </thead>
 
@@ -227,54 +233,58 @@ export default function ListaVotacionesPage({
                           </span>
                         </td>
 
-                        <td className="admin-table__actions">
-                          <div className="admin-actions">
+                        <td>
+                          <div className="admin-actions admin-actions--center">
                             <button
                               type="button"
-                              className="admin-button admin-button--secondary"
+                              className="admin-action-btn admin-action-btn--edit"
                               onClick={() =>
                                 onGoToEdit(
                                   referendum.idReferendum
                                 )
                               }
+                              title="Editar votación"
                             >
-                              Editar
+                              <Icon name="registro" alt="Editar" size={24} />
                             </button>
 
                             <button
                               type="button"
-                              className="admin-button admin-button--info"
+                              className="admin-action-btn admin-action-btn--edit"
                               onClick={() =>
                                 onGoToAssign(
                                   referendum.idReferendum
                                 )
                               }
+                              title="Asignar votantes"
                             >
-                              Asignar
+                              <Icon name="person" alt="Asignar" size={24} />
                             </button>
 
                             <button
                               type="button"
-                              className="admin-button admin-button--primary"
+                              className="admin-action-btn admin-action-btn--edit"
                               onClick={() =>
                                 onGoToResults(
                                   referendum.idReferendum
                                 )
                               }
+                              title="Ver Resultados"
                             >
-                              Resultados
+                              <Icon name="votar" alt="Resultados" size={24} />
                             </button>
 
                             <button
                               type="button"
-                              className="admin-button admin-button--danger"
+                              className="admin-action-btn admin-action-btn--delete"
                               onClick={() =>
-                                handleEliminar(
+                                confirmEliminar(
                                   referendum.idReferendum
                                 )
                               }
+                              title="Eliminar votación"
                             >
-                              Eliminar
+                              <Icon name="exit" alt="Eliminar" size={24} />
                             </button>
                           </div>
                         </td>
@@ -286,6 +296,16 @@ export default function ListaVotacionesPage({
             </div>
           )}
       </section>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Eliminar Votación"
+        message="¿Estás seguro de que deseas eliminar esta votación? Se borrarán todos los datos asociados. Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        onConfirm={handleEliminar}
+        onCancel={() => setIsConfirmOpen(false)}
+        isDestructive={true}
+      />
     </AdminLayout>
   );
 }
